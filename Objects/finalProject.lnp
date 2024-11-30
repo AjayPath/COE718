@@ -1,0 +1,22 @@
+--cpu Cortex-M3
+".\objects\blinky.o"
+".\objects\glcd_spi_lpc1700.o"
+".\objects\led.o"
+".\objects\irq.o"
+".\objects\kbd.o"
+".\objects\audiomenu.o"
+".\objects\haas.o"
+".\objects\merc.o"
+".\objects\redbull.o"
+".\objects\adcuser.o"
+".\objects\usbcore.o"
+".\objects\usbdesc.o"
+".\objects\usbhw.o"
+".\objects\usbuser.o"
+".\objects\core_cm3_1.o"
+".\objects\startup_lpc17xx_1.o"
+".\objects\system_lpc17xx_1.o"
+--strict --scatter ".\Objects\finalProject.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\Listings\finalProject.map" -o .\Objects\finalProject.axf

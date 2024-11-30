@@ -1,0 +1,75 @@
+Dependencies for Project 'usbaudio', Target 'Flash': (DO NOT MODIFY !)
+CompilerVersion: 5060750::V5.06 update 6 (build 750)::.\ARMCC
+F (.\usbuser.c)(0x51801F34)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\usbuser.o --depend .\obj\usbuser.d)
+I (type.h)(0x4D251A7C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+I (usb.h)(0x51801F34)
+I (usbcfg.h)(0x51801F34)
+I (usbhw.h)(0x51801F34)
+I (usbcore.h)(0x51801F34)
+I (usbuser.h)(0x51801F34)
+I (usbaudio.h)(0x51801F34)
+F (.\usbcore.c)(0x51801F34)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\usbcore.o --depend .\obj\usbcore.d)
+I (type.h)(0x4D251A7C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+I (usb.h)(0x51801F34)
+I (usbcfg.h)(0x51801F34)
+I (usbhw.h)(0x51801F34)
+I (usbcore.h)(0x51801F34)
+I (usbdesc.h)(0x51801F34)
+I (usbuser.h)(0x51801F34)
+I (audio.h)(0x51801F34)
+I (adcuser.h)(0x51801F34)
+F (.\usbdesc.c)(0x51801F34)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\usbdesc.o --depend .\obj\usbdesc.d)
+I (type.h)(0x4D251A7C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+I (usb.h)(0x51801F34)
+I (audio.h)(0x51801F34)
+I (usbcfg.h)(0x51801F34)
+I (usbdesc.h)(0x51801F34)
+F (.\usbdmain.c)(0x6742640D)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\usbdmain.o --depend .\obj\usbdmain.d)
+I (type.h)(0x4D251A7C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+I (usb.h)(0x51801F34)
+I (usbcfg.h)(0x51801F34)
+I (usbhw.h)(0x51801F34)
+I (usbcore.h)(0x51801F34)
+I (usbaudio.h)(0x51801F34)
+F (.\usbhw.c)(0x54526372)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\usbhw.o --depend .\obj\usbhw.d)
+I (LPC17xx.h)(0x537C1E0A)
+I (core_cm3.h)(0x4D251A7C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+I (system_LPC17xx.h)(0x5452635A)
+I (type.h)(0x4D251A7C)
+I (usb.h)(0x51801F34)
+I (usbcfg.h)(0x51801F34)
+I (usbreg.h)(0x51801F34)
+I (usbhw.h)(0x51801F34)
+I (usbcore.h)(0x51801F34)
+I (usbuser.h)(0x51801F34)
+F (.\adcuser.c)(0x51801F34)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\adcuser.o --depend .\obj\adcuser.d)
+I (type.h)(0x4D251A7C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+I (usb.h)(0x51801F34)
+I (audio.h)(0x51801F34)
+I (usbcfg.h)(0x51801F34)
+I (usbcore.h)(0x51801F34)
+I (adcuser.h)(0x51801F34)
+I (usbaudio.h)(0x51801F34)
+F (.\KBD.c)(0x672B9FDE)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\kbd.o --depend .\obj\kbd.d)
+F (.\KBD.h)(0x672BA05F)()
+F (.\LED.c)(0x50880322)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\led.o --depend .\obj\led.d)
+I (LPC17xx.H)(0x537C1E0A)
+I (core_cm3.h)(0x4D251A7C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+I (system_LPC17xx.h)(0x5452635A)
+I (LED.h)(0x50880322)
+F (.\system_LPC17xx.c)(0x537CB372)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\system_lpc17xx.o --depend .\obj\system_lpc17xx.d)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+I (LPC17xx.h)(0x537C1E0A)
+I (core_cm3.h)(0x4D251A7C)
+I (system_LPC17xx.h)(0x5452635A)
+F (.\LED.h)(0x50880322)()
+F (.\core_cm3.c)(0x4D251A7C)(-c --cpu Cortex-M3 -g -O0 --apcs=interwork -I .\common\inc -I .\common\src-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP-D__UVISION_VERSION="531"-o .\obj\core_cm3.o --depend .\obj\core_cm3.d)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC81EBC)
+F (.\startup_LPC17xx.s)(0x5088026E)(--cpu Cortex-M3 -g --apcs=interwork -IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\NXP--pd "__UVISION_VERSION SETA 531"--list .\lst\startup_lpc17xx.lst --xref -o .\obj\startup_lpc17xx.o --depend .\obj\startup_lpc17xx.d)

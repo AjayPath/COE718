@@ -1,0 +1,44 @@
+L 1 "IRQ.c"
+N/******************************************************************************/
+N/* IRQ.C: IRQ Handlers                                                        */
+N/******************************************************************************/
+N/* This file is part of the uVision/ARM development tools.                    */
+N/* Copyright (c) 2005-2009 Keil Software. All rights reserved.                */
+N/* This software may only be used under the terms of a valid, current,        */
+N/* end user licence from KEIL for a compatible version of KEIL software       */
+N/* development tools. Nothing else gives you the right to use this software.  */
+N/******************************************************************************/
+N
+N
+Nunsigned long ticks = 0;
+Nunsigned char ClockLEDOn;               /* On for 30 ms every 50 ms           */
+Nunsigned char ClockLEDOff;              /* On for 20 ms every 50 ms           */
+Nunsigned char ClockANI;                 /* Clock for Animation 150 ms         */
+N
+N
+Nvoid SysTick_Handler (void) {           /* SysTick Interrupt Handler (10ms)   */
+N  ticks++;
+N  switch (ticks) {
+N    case  3:
+N      ClockLEDOff = 1;
+N      break;
+N    case  5:
+N      ClockLEDOn  = 1;
+N      break;
+N    case  8:
+N      ClockLEDOff = 1;
+N      break;
+N    case 10:
+N      ClockLEDOn  = 1;
+N      break;
+N    case 13:
+N      ClockLEDOff = 1;
+N      break;
+N    case 15:
+N      ticks       = 0;
+N      ClockANI    = 1;
+N      ClockLEDOn  = 1;
+N    default:
+N      break;
+N  }
+N}

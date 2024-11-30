@@ -1,0 +1,1472 @@
+L 1 "usbuser.c"
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbuser.c
+N * Purpose: USB Custom User Module
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#include "type.h"
+L 1 "type.h" 1
+N/*****************************************************************************
+N *   type.h:  Type definition Header file for NXP LPC17xx Family 
+N *   Microprocessors
+N *
+N *   Copyright(C) 2009, NXP Semiconductor
+N *   All rights reserved.
+N *
+N *   History
+N *   2009.05.25  ver 1.00    Prelimnary version, first Release
+N *
+N******************************************************************************/
+N#include <stdint.h>
+L 1 "C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h" 1
+N/* Copyright (C) ARM Ltd., 1999,2014 */
+N/* All rights reserved */
+N
+N/*
+N * RCS $Revision$
+N * Checkin $Date$
+N * Revising $Author: agrant $
+N */
+N
+N#ifndef __stdint_h
+N#define __stdint_h
+N#define __ARMCLIB_VERSION 5060037
+N
+N  #ifdef __INT64_TYPE__
+S    /* armclang predefines '__INT64_TYPE__' and '__INT64_C_SUFFIX__' */
+S    #define __INT64 __INT64_TYPE__
+N  #else
+N    /* armcc has builtin '__int64' which can be used in --strict mode */
+N    #define __INT64 __int64
+N    #define __INT64_C_SUFFIX__ ll
+N  #endif
+N  #define __PASTE2(x, y) x ## y
+N  #define __PASTE(x, y) __PASTE2(x, y)
+N  #define __INT64_C(x)  __ESCAPE__(__PASTE(x, __INT64_C_SUFFIX__))
+N  #define __UINT64_C(x)  __ESCAPE__(__PASTE(x ## u, __INT64_C_SUFFIX__))
+N  #if defined(__clang__) || (defined(__ARMCC_VERSION) && !defined(__STRICT_ANSI__))
+X  #if 0L || (1L && !0L)
+N    /* armclang and non-strict armcc allow 'long long' in system headers */
+N    #define __LONGLONG long long
+N  #else
+S    /* strict armcc has '__int64' */
+S    #define __LONGLONG __int64
+N  #endif
+N
+N  #ifndef __STDINT_DECLS
+N  #define __STDINT_DECLS
+N
+N    #undef __CLIBNS
+N
+N    #ifdef __cplusplus
+S      namespace std {
+S          #define __CLIBNS std::
+S          extern "C" {
+N    #else
+N      #define __CLIBNS
+N    #endif  /* __cplusplus */
+N
+N
+N/*
+N * 'signed' is redundant below, except for 'signed char' and if
+N * the typedef is used to declare a bitfield.
+N */
+N
+N    /* 7.18.1.1 */
+N
+N    /* exact-width signed integer types */
+Ntypedef   signed          char int8_t;
+Ntypedef   signed short     int int16_t;
+Ntypedef   signed           int int32_t;
+Ntypedef   signed       __INT64 int64_t;
+Xtypedef   signed       __int64 int64_t;
+N
+N    /* exact-width unsigned integer types */
+Ntypedef unsigned          char uint8_t;
+Ntypedef unsigned short     int uint16_t;
+Ntypedef unsigned           int uint32_t;
+Ntypedef unsigned       __INT64 uint64_t;
+Xtypedef unsigned       __int64 uint64_t;
+N
+N    /* 7.18.1.2 */
+N
+N    /* smallest type of at least n bits */
+N    /* minimum-width signed integer types */
+Ntypedef   signed          char int_least8_t;
+Ntypedef   signed short     int int_least16_t;
+Ntypedef   signed           int int_least32_t;
+Ntypedef   signed       __INT64 int_least64_t;
+Xtypedef   signed       __int64 int_least64_t;
+N
+N    /* minimum-width unsigned integer types */
+Ntypedef unsigned          char uint_least8_t;
+Ntypedef unsigned short     int uint_least16_t;
+Ntypedef unsigned           int uint_least32_t;
+Ntypedef unsigned       __INT64 uint_least64_t;
+Xtypedef unsigned       __int64 uint_least64_t;
+N
+N    /* 7.18.1.3 */
+N
+N    /* fastest minimum-width signed integer types */
+Ntypedef   signed           int int_fast8_t;
+Ntypedef   signed           int int_fast16_t;
+Ntypedef   signed           int int_fast32_t;
+Ntypedef   signed       __INT64 int_fast64_t;
+Xtypedef   signed       __int64 int_fast64_t;
+N
+N    /* fastest minimum-width unsigned integer types */
+Ntypedef unsigned           int uint_fast8_t;
+Ntypedef unsigned           int uint_fast16_t;
+Ntypedef unsigned           int uint_fast32_t;
+Ntypedef unsigned       __INT64 uint_fast64_t;
+Xtypedef unsigned       __int64 uint_fast64_t;
+N
+N    /* 7.18.1.4 integer types capable of holding object pointers */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+Stypedef   signed       __INT64 intptr_t;
+Stypedef unsigned       __INT64 uintptr_t;
+N#else
+Ntypedef   signed           int intptr_t;
+Ntypedef unsigned           int uintptr_t;
+N#endif
+N
+N    /* 7.18.1.5 greatest-width integer types */
+Ntypedef   signed     __LONGLONG intmax_t;
+Xtypedef   signed     long long intmax_t;
+Ntypedef unsigned     __LONGLONG uintmax_t;
+Xtypedef unsigned     long long uintmax_t;
+N
+N
+N#if !defined(__cplusplus) || defined(__STDC_LIMIT_MACROS)
+X#if !0L || 0L
+N
+N    /* 7.18.2.1 */
+N
+N    /* minimum values of exact-width signed integer types */
+N#define INT8_MIN                   -128
+N#define INT16_MIN                -32768
+N#define INT32_MIN          (~0x7fffffff)   /* -2147483648 is unsigned */
+N#define INT64_MIN  __INT64_C(~0x7fffffffffffffff) /* -9223372036854775808 is unsigned */
+N
+N    /* maximum values of exact-width signed integer types */
+N#define INT8_MAX                    127
+N#define INT16_MAX                 32767
+N#define INT32_MAX            2147483647
+N#define INT64_MAX  __INT64_C(9223372036854775807)
+N
+N    /* maximum values of exact-width unsigned integer types */
+N#define UINT8_MAX                   255
+N#define UINT16_MAX                65535
+N#define UINT32_MAX           4294967295u
+N#define UINT64_MAX __UINT64_C(18446744073709551615)
+N
+N    /* 7.18.2.2 */
+N
+N    /* minimum values of minimum-width signed integer types */
+N#define INT_LEAST8_MIN                   -128
+N#define INT_LEAST16_MIN                -32768
+N#define INT_LEAST32_MIN          (~0x7fffffff)
+N#define INT_LEAST64_MIN  __INT64_C(~0x7fffffffffffffff)
+N
+N    /* maximum values of minimum-width signed integer types */
+N#define INT_LEAST8_MAX                    127
+N#define INT_LEAST16_MAX                 32767
+N#define INT_LEAST32_MAX            2147483647
+N#define INT_LEAST64_MAX  __INT64_C(9223372036854775807)
+N
+N    /* maximum values of minimum-width unsigned integer types */
+N#define UINT_LEAST8_MAX                   255
+N#define UINT_LEAST16_MAX                65535
+N#define UINT_LEAST32_MAX           4294967295u
+N#define UINT_LEAST64_MAX __UINT64_C(18446744073709551615)
+N
+N    /* 7.18.2.3 */
+N
+N    /* minimum values of fastest minimum-width signed integer types */
+N#define INT_FAST8_MIN           (~0x7fffffff)
+N#define INT_FAST16_MIN          (~0x7fffffff)
+N#define INT_FAST32_MIN          (~0x7fffffff)
+N#define INT_FAST64_MIN  __INT64_C(~0x7fffffffffffffff)
+N
+N    /* maximum values of fastest minimum-width signed integer types */
+N#define INT_FAST8_MAX             2147483647
+N#define INT_FAST16_MAX            2147483647
+N#define INT_FAST32_MAX            2147483647
+N#define INT_FAST64_MAX  __INT64_C(9223372036854775807)
+N
+N    /* maximum values of fastest minimum-width unsigned integer types */
+N#define UINT_FAST8_MAX            4294967295u
+N#define UINT_FAST16_MAX           4294967295u
+N#define UINT_FAST32_MAX           4294967295u
+N#define UINT_FAST64_MAX __UINT64_C(18446744073709551615)
+N
+N    /* 7.18.2.4 */
+N
+N    /* minimum value of pointer-holding signed integer type */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define INTPTR_MIN INT64_MIN
+N#else
+N#define INTPTR_MIN INT32_MIN
+N#endif
+N
+N    /* maximum value of pointer-holding signed integer type */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define INTPTR_MAX INT64_MAX
+N#else
+N#define INTPTR_MAX INT32_MAX
+N#endif
+N
+N    /* maximum value of pointer-holding unsigned integer type */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define UINTPTR_MAX UINT64_MAX
+N#else
+N#define UINTPTR_MAX UINT32_MAX
+N#endif
+N
+N    /* 7.18.2.5 */
+N
+N    /* minimum value of greatest-width signed integer type */
+N#define INTMAX_MIN  __ESCAPE__(~0x7fffffffffffffffll)
+N
+N    /* maximum value of greatest-width signed integer type */
+N#define INTMAX_MAX  __ESCAPE__(9223372036854775807ll)
+N
+N    /* maximum value of greatest-width unsigned integer type */
+N#define UINTMAX_MAX __ESCAPE__(18446744073709551615ull)
+N
+N    /* 7.18.3 */
+N
+N    /* limits of ptrdiff_t */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define PTRDIFF_MIN INT64_MIN
+S#define PTRDIFF_MAX INT64_MAX
+N#else
+N#define PTRDIFF_MIN INT32_MIN
+N#define PTRDIFF_MAX INT32_MAX
+N#endif
+N
+N    /* limits of sig_atomic_t */
+N#define SIG_ATOMIC_MIN (~0x7fffffff)
+N#define SIG_ATOMIC_MAX   2147483647
+N
+N    /* limit of size_t */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define SIZE_MAX UINT64_MAX
+N#else
+N#define SIZE_MAX UINT32_MAX
+N#endif
+N
+N    /* limits of wchar_t */
+N    /* NB we have to undef and redef because they're defined in both
+N     * stdint.h and wchar.h */
+N#undef WCHAR_MIN
+N#undef WCHAR_MAX
+N
+N#if defined(__WCHAR32) || (defined(__ARM_SIZEOF_WCHAR_T) && __ARM_SIZEOF_WCHAR_T == 4)
+X#if 0L || (0L && __ARM_SIZEOF_WCHAR_T == 4)
+S  #define WCHAR_MIN   0
+S  #define WCHAR_MAX   0xffffffffU
+N#else
+N  #define WCHAR_MIN   0
+N  #define WCHAR_MAX   65535
+N#endif
+N
+N    /* limits of wint_t */
+N#define WINT_MIN (~0x7fffffff)
+N#define WINT_MAX 2147483647
+N
+N#endif /* __STDC_LIMIT_MACROS */
+N
+N#if !defined(__cplusplus) || defined(__STDC_CONSTANT_MACROS)
+X#if !0L || 0L
+N
+N    /* 7.18.4.1 macros for minimum-width integer constants */
+N#define INT8_C(x)   (x)
+N#define INT16_C(x)  (x)
+N#define INT32_C(x)  (x)
+N#define INT64_C(x)  __INT64_C(x)
+N
+N#define UINT8_C(x)  (x ## u)
+N#define UINT16_C(x) (x ## u)
+N#define UINT32_C(x) (x ## u)
+N#define UINT64_C(x) __UINT64_C(x)
+N
+N    /* 7.18.4.2 macros for greatest-width integer constants */
+N#define INTMAX_C(x)  __ESCAPE__(x ## ll)
+N#define UINTMAX_C(x) __ESCAPE__(x ## ull)
+N
+N#endif /* __STDC_CONSTANT_MACROS */
+N
+N    #ifdef __cplusplus
+S         }  /* extern "C" */
+S      }  /* namespace std */
+N    #endif /* __cplusplus */
+N  #endif /* __STDINT_DECLS */
+N
+N  #ifdef __cplusplus
+S    #ifndef __STDINT_NO_EXPORTS
+S      using ::std::int8_t;
+S      using ::std::int16_t;
+S      using ::std::int32_t;
+S      using ::std::int64_t;
+S      using ::std::uint8_t;
+S      using ::std::uint16_t;
+S      using ::std::uint32_t;
+S      using ::std::uint64_t;
+S      using ::std::int_least8_t;
+S      using ::std::int_least16_t;
+S      using ::std::int_least32_t;
+S      using ::std::int_least64_t;
+S      using ::std::uint_least8_t;
+S      using ::std::uint_least16_t;
+S      using ::std::uint_least32_t;
+S      using ::std::uint_least64_t;
+S      using ::std::int_fast8_t;
+S      using ::std::int_fast16_t;
+S      using ::std::int_fast32_t;
+S      using ::std::int_fast64_t;
+S      using ::std::uint_fast8_t;
+S      using ::std::uint_fast16_t;
+S      using ::std::uint_fast32_t;
+S      using ::std::uint_fast64_t;
+S      using ::std::intptr_t;
+S      using ::std::uintptr_t;
+S      using ::std::intmax_t;
+S      using ::std::uintmax_t;
+S    #endif
+N  #endif /* __cplusplus */
+N
+N#undef __INT64
+N#undef __LONGLONG
+N
+N#endif /* __stdint_h */
+N
+N/* end of stdint.h */
+L 13 "type.h" 2
+N
+N#ifndef __TYPE_H__
+N#define __TYPE_H__
+N
+N#ifndef NULL
+N#define NULL    ((void *)0)
+N#endif
+N
+N#ifndef FALSE
+N#define FALSE   (0)
+N#endif
+N
+N#ifndef TRUE
+N#define TRUE    (1)
+N#endif
+N
+N
+Ntypedef enum {RESET = 0, SET = !RESET} FlagStatus, ITStatus;
+Ntypedef enum {DISABLE = 0, ENABLE = !DISABLE} FunctionalState;
+N
+N#endif  /* __TYPE_H__ */
+L 20 "usbuser.c" 2
+N
+N#include "usb.h"
+L 1 "usb.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usb.h
+N * Purpose: USB Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __USB_H__
+N#define __USB_H__
+N
+N
+Ntypedef __packed union {
+N  uint16_t W;
+N  __packed struct {
+N    uint8_t L;
+N    uint8_t H;
+N  } WB;
+N} WORD_BYTE;
+N
+N
+N/* bmRequestType.Dir */
+N#define REQUEST_HOST_TO_DEVICE     0
+N#define REQUEST_DEVICE_TO_HOST     1
+N
+N/* bmRequestType.Type */
+N#define REQUEST_STANDARD           0
+N#define REQUEST_CLASS              1
+N#define REQUEST_VENDOR             2
+N#define REQUEST_RESERVED           3
+N
+N/* bmRequestType.Recipient */
+N#define REQUEST_TO_DEVICE          0
+N#define REQUEST_TO_INTERFACE       1
+N#define REQUEST_TO_ENDPOINT        2
+N#define REQUEST_TO_OTHER           3
+N
+N/* bmRequestType Definition */
+Ntypedef __packed union _REQUEST_TYPE {
+N  __packed struct _BM {
+N    uint8_t Recipient : 5;
+N    uint8_t Type      : 2;
+N    uint8_t Dir       : 1;
+N  } BM;
+N  uint8_t B;
+N} REQUEST_TYPE;
+N
+N/* USB Standard Request Codes */
+N#define USB_REQUEST_GET_STATUS                 0
+N#define USB_REQUEST_CLEAR_FEATURE              1
+N#define USB_REQUEST_SET_FEATURE                3
+N#define USB_REQUEST_SET_ADDRESS                5
+N#define USB_REQUEST_GET_DESCRIPTOR             6
+N#define USB_REQUEST_SET_DESCRIPTOR             7
+N#define USB_REQUEST_GET_CONFIGURATION          8
+N#define USB_REQUEST_SET_CONFIGURATION          9
+N#define USB_REQUEST_GET_INTERFACE              10
+N#define USB_REQUEST_SET_INTERFACE              11
+N#define USB_REQUEST_SYNC_FRAME                 12
+N
+N/* USB GET_STATUS Bit Values */
+N#define USB_GETSTATUS_SELF_POWERED             0x01
+N#define USB_GETSTATUS_REMOTE_WAKEUP            0x02
+N#define USB_GETSTATUS_ENDPOINT_STALL           0x01
+N
+N/* USB Standard Feature selectors */
+N#define USB_FEATURE_ENDPOINT_STALL             0
+N#define USB_FEATURE_REMOTE_WAKEUP              1
+N
+N/* USB Default Control Pipe Setup Packet */
+Ntypedef __packed struct _USB_SETUP_PACKET {
+N  REQUEST_TYPE bmRequestType;
+N  uint8_t         bRequest;
+N  WORD_BYTE    wValue;
+N  WORD_BYTE    wIndex;
+N  uint16_t         wLength;
+N} USB_SETUP_PACKET;
+N
+N
+N/* USB Descriptor Types */
+N#define USB_DEVICE_DESCRIPTOR_TYPE                  1
+N#define USB_CONFIGURATION_DESCRIPTOR_TYPE           2
+N#define USB_STRING_DESCRIPTOR_TYPE                  3
+N#define USB_INTERFACE_DESCRIPTOR_TYPE               4
+N#define USB_ENDPOINT_DESCRIPTOR_TYPE                5
+N#define USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE        6
+N#define USB_OTHER_SPEED_CONFIG_DESCRIPTOR_TYPE      7
+N#define USB_INTERFACE_POWER_DESCRIPTOR_TYPE         8
+N#define USB_OTG_DESCRIPTOR_TYPE                     9
+N#define USB_DEBUG_DESCRIPTOR_TYPE                  10
+N#define USB_INTERFACE_ASSOCIATION_DESCRIPTOR_TYPE  11 
+N
+N/* USB Device Classes */
+N#define USB_DEVICE_CLASS_RESERVED              0x00
+N#define USB_DEVICE_CLASS_AUDIO                 0x01
+N#define USB_DEVICE_CLASS_COMMUNICATIONS        0x02
+N#define USB_DEVICE_CLASS_HUMAN_INTERFACE       0x03
+N#define USB_DEVICE_CLASS_MONITOR               0x04
+N#define USB_DEVICE_CLASS_PHYSICAL_INTERFACE    0x05
+N#define USB_DEVICE_CLASS_POWER                 0x06
+N#define USB_DEVICE_CLASS_PRINTER               0x07
+N#define USB_DEVICE_CLASS_STORAGE               0x08
+N#define USB_DEVICE_CLASS_HUB                   0x09
+N#define USB_DEVICE_CLASS_MISCELLANEOUS         0xEF
+N#define USB_DEVICE_CLASS_VENDOR_SPECIFIC       0xFF
+N
+N/* bmAttributes in Configuration Descriptor */
+N#define USB_CONFIG_POWERED_MASK                0x40
+N#define USB_CONFIG_BUS_POWERED                 0x80
+N#define USB_CONFIG_SELF_POWERED                0xC0
+N#define USB_CONFIG_REMOTE_WAKEUP               0x20
+N
+N/* bMaxPower in Configuration Descriptor */
+N#define USB_CONFIG_POWER_MA(mA)                ((mA)/2)
+N
+N/* bEndpointAddress in Endpoint Descriptor */
+N#define USB_ENDPOINT_DIRECTION_MASK            0x80
+N#define USB_ENDPOINT_OUT(addr)                 ((addr) | 0x00)
+N#define USB_ENDPOINT_IN(addr)                  ((addr) | 0x80)
+N
+N/* bmAttributes in Endpoint Descriptor */
+N#define USB_ENDPOINT_TYPE_MASK                 0x03
+N#define USB_ENDPOINT_TYPE_CONTROL              0x00
+N#define USB_ENDPOINT_TYPE_ISOCHRONOUS          0x01
+N#define USB_ENDPOINT_TYPE_BULK                 0x02
+N#define USB_ENDPOINT_TYPE_INTERRUPT            0x03
+N#define USB_ENDPOINT_SYNC_MASK                 0x0C
+N#define USB_ENDPOINT_SYNC_NO_SYNCHRONIZATION   0x00
+N#define USB_ENDPOINT_SYNC_ASYNCHRONOUS         0x04
+N#define USB_ENDPOINT_SYNC_ADAPTIVE             0x08
+N#define USB_ENDPOINT_SYNC_SYNCHRONOUS          0x0C
+N#define USB_ENDPOINT_USAGE_MASK                0x30
+N#define USB_ENDPOINT_USAGE_DATA                0x00
+N#define USB_ENDPOINT_USAGE_FEEDBACK            0x10
+N#define USB_ENDPOINT_USAGE_IMPLICIT_FEEDBACK   0x20
+N#define USB_ENDPOINT_USAGE_RESERVED            0x30
+N
+N/* USB Standard Device Descriptor */
+Ntypedef __packed struct _USB_DEVICE_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint16_t  bcdUSB;
+N  uint8_t  bDeviceClass;
+N  uint8_t  bDeviceSubClass;
+N  uint8_t  bDeviceProtocol;
+N  uint8_t  bMaxPacketSize0;
+N  uint16_t  idVendor;
+N  uint16_t  idProduct;
+N  uint16_t  bcdDevice;
+N  uint8_t  iManufacturer;
+N  uint8_t  iProduct;
+N  uint8_t  iSerialNumber;
+N  uint8_t  bNumConfigurations;
+N} USB_DEVICE_DESCRIPTOR;
+N
+N/* USB 2.0 Device Qualifier Descriptor */
+Ntypedef __packed struct _USB_DEVICE_QUALIFIER_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint16_t  bcdUSB;
+N  uint8_t  bDeviceClass;
+N  uint8_t  bDeviceSubClass;
+N  uint8_t  bDeviceProtocol;
+N  uint8_t  bMaxPacketSize0;
+N  uint8_t  bNumConfigurations;
+N  uint8_t  bReserved;
+N} USB_DEVICE_QUALIFIER_DESCRIPTOR;
+N
+N/* USB Standard Configuration Descriptor */
+Ntypedef __packed struct _USB_CONFIGURATION_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint16_t  wTotalLength;
+N  uint8_t  bNumInterfaces;
+N  uint8_t  bConfigurationValue;
+N  uint8_t  iConfiguration;
+N  uint8_t  bmAttributes;
+N  uint8_t  bMaxPower;
+N} USB_CONFIGURATION_DESCRIPTOR;
+N
+N/* USB Standard Interface Descriptor */
+Ntypedef __packed struct _USB_INTERFACE_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint8_t  bInterfaceNumber;
+N  uint8_t  bAlternateSetting;
+N  uint8_t  bNumEndpoints;
+N  uint8_t  bInterfaceClass;
+N  uint8_t  bInterfaceSubClass;
+N  uint8_t  bInterfaceProtocol;
+N  uint8_t  iInterface;
+N} USB_INTERFACE_DESCRIPTOR;
+N
+N/* USB Standard Endpoint Descriptor */
+Ntypedef __packed struct _USB_ENDPOINT_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint8_t  bEndpointAddress;
+N  uint8_t  bmAttributes;
+N  uint16_t  wMaxPacketSize;
+N  uint8_t  bInterval;
+N} USB_ENDPOINT_DESCRIPTOR;
+N
+N/* USB String Descriptor */
+Ntypedef __packed struct _USB_STRING_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint16_t  bString/*[]*/;
+N} USB_STRING_DESCRIPTOR;
+N
+N/* USB Common Descriptor */
+Ntypedef __packed struct _USB_COMMON_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N} USB_COMMON_DESCRIPTOR;
+N
+N
+N#endif  /* __USB_H__ */
+L 22 "usbuser.c" 2
+N#include "usbcfg.h"
+L 1 "usbcfg.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbcfg.h
+N * Purpose: USB Custom Configuration
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *----------------------------------------------------------------------------
+N * History:
+N *          V1.20 Added vendor specific support
+N *          V1.00 Initial Version
+N *----------------------------------------------------------------------------*/
+N
+N#ifndef __USBCFG_H__
+N#define __USBCFG_H__
+N
+N
+N//*** <<< Use Configuration Wizard in Context Menu >>> ***
+N
+N
+N/*
+N// <h> USB Configuration
+N//   <o0> USB Power
+N//        <i> Default Power Setting
+N//        <0=> Bus-powered
+N//        <1=> Self-powered
+N//   <o1> Max Number of Interfaces <1-256>
+N//   <o2> Max Number of Endpoints  <1-32>
+N//   <o3> Max Endpoint 0 Packet Size
+N//        <8=> 8 Bytes <16=> 16 Bytes <32=> 32 Bytes <64=> 64 Bytes
+N//   <e4> DMA Transfer
+N//     <i> Use DMA for selected Endpoints
+N//     <o5.0>  Endpoint 0 Out
+N//     <o5.1>  Endpoint 0 In
+N//     <o5.2>  Endpoint 1 Out
+N//     <o5.3>  Endpoint 1 In
+N//     <o5.4>  Endpoint 2 Out
+N//     <o5.5>  Endpoint 2 In
+N//     <o5.6>  Endpoint 3 Out
+N//     <o5.7>  Endpoint 3 In
+N//     <o5.8>  Endpoint 4 Out
+N//     <o5.9>  Endpoint 4 In
+N//     <o5.10> Endpoint 5 Out
+N//     <o5.11> Endpoint 5 In
+N//     <o5.12> Endpoint 6 Out
+N//     <o5.13> Endpoint 6 In
+N//     <o5.14> Endpoint 7 Out
+N//     <o5.15> Endpoint 7 In
+N//     <o5.16> Endpoint 8 Out
+N//     <o5.17> Endpoint 8 In
+N//     <o5.18> Endpoint 9 Out
+N//     <o5.19> Endpoint 9 In
+N//     <o5.20> Endpoint 10 Out
+N//     <o5.21> Endpoint 10 In
+N//     <o5.22> Endpoint 11 Out
+N//     <o5.23> Endpoint 11 In
+N//     <o5.24> Endpoint 12 Out
+N//     <o5.25> Endpoint 12 In
+N//     <o5.26> Endpoint 13 Out
+N//     <o5.27> Endpoint 13 In
+N//     <o5.28> Endpoint 14 Out
+N//     <o5.29> Endpoint 14 In
+N//     <o5.30> Endpoint 15 Out
+N//     <o5.31> Endpoint 15 In
+N//   </e>
+N// </h>
+N*/
+N
+N#define USB_POWER           0
+N#define USB_IF_NUM          4
+N#define USB_EP_NUM          32
+N#define USB_MAX_PACKET0     64
+N#define USB_DMA             1
+N#define USB_DMA_EP          0x00000040
+N
+N
+N/*
+N// <h> USB Event Handlers
+N//   <h> Device Events
+N//     <o0.0> Power Event
+N//     <o1.0> Reset Event
+N//     <o2.0> Suspend Event
+N//     <o3.0> Resume Event
+N//     <o4.0> Remote Wakeup Event
+N//     <o5.0> Start of Frame Event
+N//     <o6.0> Error Event
+N//   </h>
+N//   <h> Endpoint Events
+N//     <o7.0>  Endpoint 0 Event
+N//     <o7.1>  Endpoint 1 Event
+N//     <o7.2>  Endpoint 2 Event
+N//     <o7.3>  Endpoint 3 Event
+N//     <o7.4>  Endpoint 4 Event
+N//     <o7.5>  Endpoint 5 Event
+N//     <o7.6>  Endpoint 6 Event
+N//     <o7.7>  Endpoint 7 Event
+N//     <o7.8>  Endpoint 8 Event
+N//     <o7.9>  Endpoint 9 Event
+N//     <o7.10> Endpoint 10 Event
+N//     <o7.11> Endpoint 11 Event
+N//     <o7.12> Endpoint 12 Event
+N//     <o7.13> Endpoint 13 Event
+N//     <o7.14> Endpoint 14 Event
+N//     <o7.15> Endpoint 15 Event
+N//   </h>
+N//   <h> USB Core Events
+N//     <o8.0>  Set Configuration Event
+N//     <o9.0>  Set Interface Event
+N//     <o10.0> Set/Clear Feature Event
+N//   </h>
+N// </h>
+N*/
+N
+N#define USB_POWER_EVENT     0
+N#define USB_RESET_EVENT     1
+N#define USB_SUSPEND_EVENT   0
+N#define USB_RESUME_EVENT    0
+N#define USB_WAKEUP_EVENT    0
+N#define USB_SOF_EVENT       1
+N#define USB_ERROR_EVENT     0
+N#define USB_EP_EVENT        0x0009
+N#define USB_CONFIGURE_EVENT 0
+N#define USB_INTERFACE_EVENT 0
+N#define USB_FEATURE_EVENT   0
+N
+N
+N/*
+N// <e0> USB Class Support
+N//   <i> enables USB Class specific Requests
+N//   <e1> Human Interface Device (HID)
+N//     <o2> Interface Number <0-255>
+N//   </e>
+N//   <e3> Mass Storage
+N//     <o4> Interface Number <0-255>
+N//   </e>
+N//   <e5> Audio Device
+N//     <o6> Control Interface Number <0-255>
+N//     <o7> Streaming Interface 1 Number <0-255>
+N//     <o8> Streaming Interface 2 Number <0-255>
+N//   </e>
+N//   <e9> Communication Device
+N//     <o10> Control Interface Number <0-255>
+N//     <o11> Bulk Interface Number <0-255>
+N//     <o12> Max Communication Device Buffer Size
+N//        <8=> 8 Bytes <16=> 16 Bytes <32=> 32 Bytes <64=> 64 Bytes 
+N//   </e>
+N// </e>
+N*/
+N
+N#define USB_CLASS           1
+N#define USB_HID             0
+N#define USB_HID_IF_NUM      0
+N#define USB_MSC             0
+N#define USB_MSC_IF_NUM      0
+N#define USB_AUDIO           1
+N#define USB_ADC_CIF_NUM     0
+N#define USB_ADC_SIF1_NUM    1
+N#define USB_ADC_SIF2_NUM    2
+N#define USB_CDC  			0
+N#define USB_CDC_CIF_NUM     0
+N#define USB_CDC_DIF_NUM     1
+N#define USB_CDC_BUFSIZE     64
+N
+N/*
+N// <e0> USB Vendor Support
+N//   <i> enables USB Vendor specific Requests
+N// </e>
+N*/
+N#define USB_VENDOR          0
+N
+N
+N#endif  /* __USBCFG_H__ */
+L 23 "usbuser.c" 2
+N#include "usbhw.h"
+L 1 "usbhw.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbhw.h
+N * Purpose: USB Hardware Layer Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *----------------------------------------------------------------------------
+N * History:
+N *          V1.20 Added USB_ClearEPBuf 
+N *          V1.00 Initial Version
+N *----------------------------------------------------------------------------*/
+N
+N#ifndef __USBHW_H__
+N#define __USBHW_H__
+N
+N
+N/* USB RAM Definitions */
+N#define USB_RAM_ADR     0x20080000  /* USB RAM Start Address */
+N#define USB_RAM_SZ      0x00004000  /* USB RAM Size (4kB) */
+N
+N/* DMA Endpoint Descriptors */
+N#define DD_NISO_CNT             16  /* Non-Iso EP DMA Descr. Count (max. 32) */
+N#define DD_ISO_CNT               8  /* Iso EP DMA Descriptor Count (max. 32) */
+N#define DD_NISO_SZ    (DD_NISO_CNT * 16)    /* Non-Iso DMA Descr. Size */
+N#define DD_ISO_SZ     (DD_ISO_CNT  * 20)    /* Iso DMA Descriptor Size */
+N#define DD_NISO_ADR   (USB_RAM_ADR + 128)   /* Non-Iso DMA Descr. Address */
+N#define DD_ISO_ADR    (DD_NISO_ADR + DD_NISO_SZ) /* Iso DMA Descr. Address */
+N#define DD_SZ                 (128 + DD_NISO_SZ + DD_ISO_SZ) /* Descr. Size */
+N
+N/* DMA Buffer Memory Definitions */
+N#define DMA_BUF_ADR   (USB_RAM_ADR + DD_SZ) /* DMA Buffer Start Address */
+N#define DMA_BUF_SZ    (USB_RAM_SZ  - DD_SZ) /* DMA Buffer Size */
+N
+N/* USB Error Codes */
+N#define USB_ERR_PID         0x0001  /* PID Error */
+N#define USB_ERR_UEPKT       0x0002  /* Unexpected Packet */
+N#define USB_ERR_DCRC        0x0004  /* Data CRC Error */
+N#define USB_ERR_TIMOUT      0x0008  /* Bus Time-out Error */
+N#define USB_ERR_EOP         0x0010  /* End of Packet Error */
+N#define USB_ERR_B_OVRN      0x0020  /* Buffer Overrun */
+N#define USB_ERR_BTSTF       0x0040  /* Bit Stuff Error */
+N#define USB_ERR_TGL         0x0080  /* Toggle Bit Error */
+N
+N/* USB DMA Status Codes */
+N#define USB_DMA_INVALID     0x0000  /* DMA Invalid - Not Configured */
+N#define USB_DMA_IDLE        0x0001  /* DMA Idle - Waiting for Trigger */
+N#define USB_DMA_BUSY        0x0002  /* DMA Busy - Transfer in progress */
+N#define USB_DMA_DONE        0x0003  /* DMA Transfer Done (no Errors)*/
+N#define USB_DMA_OVER_RUN    0x0004  /* Data Over Run */
+N#define USB_DMA_UNDER_RUN   0x0005  /* Data Under Run (Short Packet) */
+N#define USB_DMA_ERROR       0x0006  /* Error */
+N#define USB_DMA_UNKNOWN     0xFFFF  /* Unknown State */
+N
+N/* USB DMA Descriptor */
+Ntypedef struct _USB_DMA_DESCRIPTOR {
+N  uint32_t BufAdr;                     /* DMA Buffer Address */
+N  uint16_t  BufLen;                     /* DMA Buffer Length */
+N  uint16_t  MaxSize;                    /* Maximum Packet Size */
+N  uint32_t InfoAdr;                    /* Packet Info Memory Address */
+N  union {                           /* DMA Configuration */
+N    struct {
+N      uint32_t Link   : 1;             /* Link to existing Descriptors */
+N      uint32_t IsoEP  : 1;             /* Isonchronous Endpoint */
+N      uint32_t ATLE   : 1;             /* ATLE (Auto Transfer Length Extract) */
+N      uint32_t Rsrvd  : 5;             /* Reserved */
+N      uint32_t LenPos : 8;             /* Length Position (ATLE) */
+N    } Type;
+N    uint32_t Val;
+N  } Cfg;
+N} USB_DMA_DESCRIPTOR;
+N
+N/* USB Hardware Functions */
+Nextern void  USB_Init       (void);
+Nextern void  USB_Connect    (uint32_t  con);
+Nextern void  USB_Reset      (void);
+Nextern void  USB_Suspend    (void);
+Nextern void  USB_Resume     (void);
+Nextern void  USB_WakeUp     (void);
+Nextern void  USB_WakeUpCfg  (uint32_t  cfg);
+Nextern void  USB_SetAddress (uint32_t adr);
+Nextern void  USB_Configure  (uint32_t  cfg);
+Nextern void  USB_ConfigEP   (USB_ENDPOINT_DESCRIPTOR *pEPD);
+Nextern void  USB_DirCtrlEP  (uint32_t dir);
+Nextern void  USB_EnableEP   (uint32_t EPNum);
+Nextern void  USB_DisableEP  (uint32_t EPNum);
+Nextern void  USB_ResetEP    (uint32_t EPNum);
+Nextern void  USB_SetStallEP (uint32_t EPNum);
+Nextern void  USB_ClrStallEP (uint32_t EPNum);
+Nextern void USB_ClearEPBuf  (uint32_t  EPNum);
+Nextern uint32_t USB_ReadEP     (uint32_t EPNum, uint8_t *pData);
+Nextern uint32_t USB_WriteEP    (uint32_t EPNum, uint8_t *pData, uint32_t cnt);
+Nextern uint32_t  USB_DMA_Setup  (uint32_t EPNum, USB_DMA_DESCRIPTOR *pDD);
+Nextern void  USB_DMA_Enable (uint32_t EPNum);
+Nextern void  USB_DMA_Disable(uint32_t EPNum);
+Nextern uint32_t USB_DMA_Status (uint32_t EPNum);
+Nextern uint32_t USB_DMA_BufAdr (uint32_t EPNum);
+Nextern uint32_t USB_DMA_BufCnt (uint32_t EPNum);
+Nextern uint32_t USB_GetFrame   (void);
+Nextern void  USB_IRQHandler (void);
+N
+N
+N#endif  /* __USBHW_H__ */
+L 24 "usbuser.c" 2
+N#include "usbcore.h"
+L 1 "usbcore.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbcore.h
+N * Purpose: USB Core Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __USBCORE_H__
+N#define __USBCORE_H__
+N
+N
+N/* USB Endpoint Data Structure */
+Ntypedef struct _USB_EP_DATA {
+N  uint8_t  *pData;
+N  uint16_t Count;
+N} USB_EP_DATA;
+N
+N/* USB Core Global Variables */
+Nextern uint16_t USB_DeviceStatus;
+Nextern uint8_t  USB_DeviceAddress;
+Nextern uint8_t  USB_Configuration;
+Nextern uint32_t USB_EndPointMask;
+Nextern uint32_t USB_EndPointHalt;
+Nextern uint32_t USB_EndPointStall;
+Nextern uint8_t  USB_AltSetting[USB_IF_NUM];
+Xextern uint8_t  USB_AltSetting[4];
+N
+N/* USB Endpoint 0 Buffer */
+Nextern uint8_t  EP0Buf[USB_MAX_PACKET0];
+Xextern uint8_t  EP0Buf[64];
+N
+N/* USB Endpoint 0 Data Info */
+Nextern USB_EP_DATA EP0Data;
+N
+N/* USB Setup Packet */
+Nextern USB_SETUP_PACKET SetupPacket;
+N
+N/* USB Core Functions */
+Nextern void USB_ResetCore (void);
+N
+N
+N
+N#endif  /* __USBCORE_H__ */
+L 25 "usbuser.c" 2
+N#include "usbuser.h"
+L 1 "usbuser.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbuser.h
+N * Purpose: USB Custom User Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __USBUSER_H__
+N#define __USBUSER_H__
+N
+N
+N/* USB Device Events Callback Functions */
+Nextern void USB_Power_Event     (uint32_t  power);
+Nextern void USB_Reset_Event     (void);
+Nextern void USB_Suspend_Event   (void);
+Nextern void USB_Resume_Event    (void);
+Nextern void USB_WakeUp_Event    (void);
+Nextern void USB_SOF_Event       (void);
+Nextern void USB_Error_Event     (uint32_t error);
+N
+N/* USB Endpoint Callback Events */
+N#define USB_EVT_SETUP       1   /* Setup Packet */
+N#define USB_EVT_OUT         2   /* OUT Packet */
+N#define USB_EVT_IN          3   /*  IN Packet */
+N#define USB_EVT_OUT_NAK     4   /* OUT Packet - Not Acknowledged */
+N#define USB_EVT_IN_NAK      5   /*  IN Packet - Not Acknowledged */
+N#define USB_EVT_OUT_STALL   6   /* OUT Packet - Stalled */
+N#define USB_EVT_IN_STALL    7   /*  IN Packet - Stalled */
+N#define USB_EVT_OUT_DMA_EOT 8   /* DMA OUT EP - End of Transfer */
+N#define USB_EVT_IN_DMA_EOT  9   /* DMA  IN EP - End of Transfer */
+N#define USB_EVT_OUT_DMA_NDR 10  /* DMA OUT EP - New Descriptor Request */
+N#define USB_EVT_IN_DMA_NDR  11  /* DMA  IN EP - New Descriptor Request */
+N#define USB_EVT_OUT_DMA_ERR 12  /* DMA OUT EP - Error */
+N#define USB_EVT_IN_DMA_ERR  13  /* DMA  IN EP - Error */
+N
+N/* USB Endpoint Events Callback Pointers */
+Nextern void (* const USB_P_EP[16])(uint32_t event);
+N
+N/* USB Endpoint Events Callback Functions */
+Nextern void USB_EndPoint0  (uint32_t event);
+Nextern void USB_EndPoint1  (uint32_t event);
+Nextern void USB_EndPoint2  (uint32_t event);
+Nextern void USB_EndPoint3  (uint32_t event);
+Nextern void USB_EndPoint4  (uint32_t event);
+Nextern void USB_EndPoint5  (uint32_t event);
+Nextern void USB_EndPoint6  (uint32_t event);
+Nextern void USB_EndPoint7  (uint32_t event);
+Nextern void USB_EndPoint8  (uint32_t event);
+Nextern void USB_EndPoint9  (uint32_t event);
+Nextern void USB_EndPoint10 (uint32_t event);
+Nextern void USB_EndPoint11 (uint32_t event);
+Nextern void USB_EndPoint12 (uint32_t event);
+Nextern void USB_EndPoint13 (uint32_t event);
+Nextern void USB_EndPoint14 (uint32_t event);
+Nextern void USB_EndPoint15 (uint32_t event);
+N
+N/* USB Core Events Callback Functions */
+Nextern void USB_Configure_Event (void);
+Nextern void USB_Interface_Event (void);
+Nextern void USB_Feature_Event   (void);
+N
+N
+N#endif  /* __USBUSER_H__ */
+L 26 "usbuser.c" 2
+N
+N#include "usbaudio.h"
+L 1 "usbaudio.h" 1
+N/*----------------------------------------------------------------------------
+N *      Name:    usbaudio.h
+N *      Purpose: USB Audio Demo Definitions
+N *      Version: V1.10
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N/* Audio Definitions */
+N#define DATA_FREQ 32000                 /* Audio Data Frequency */
+N#define P_S       32                    /* Packet Size */
+N#if USB_DMA
+X#if 1
+N#define P_C       4                     /* Packet Count */
+N#else
+S#define P_C       1                     /* Packet Count */
+N#endif
+N#define B_S       (8*P_C*P_S)           /* Buffer Size */
+N
+N/* Push Button Definitions */
+N// #define PBINT     0x00004000            /* P0.14 */
+N
+N/* LED Definitions */
+N#define LEDMSK    0x000000FF            /* P2.0..7 */
+N
+N/* Audio Demo Variables */
+Nextern uint8_t  Mute;                      /* Mute State */
+Nextern uint32_t Volume;                    /* Volume Level */
+Nextern uint16_t  VolCur;                    /* Volume Current Value */
+N#if !USB_DMA
+X#if !1
+Sextern uint32_t InfoBuf[P_C];              /* Packet Info Buffer */
+Sextern short DataBuf[B_S];              /* Data Buffer */
+N#else
+Nextern uint32_t *InfoBuf;
+Nextern short *DataBuf;
+N#endif
+Nextern uint16_t  DataOut;                   /* Data Out Index */
+Nextern uint16_t  DataIn;                    /* Data In Index */
+Nextern uint8_t   DataRun;                   /* Data Stream Run State */
+L 28 "usbuser.c" 2
+N
+N
+N/*
+N *  USB Power Event Callback
+N *   Called automatically on USB Power Event
+N *    Parameter:       power: On(TRUE)/Off(FALSE)
+N */
+N
+N#if USB_POWER_EVENT
+X#if 0
+Svoid USB_Power_Event (uint32_t  power) {
+S}
+N#endif
+N
+N
+N/*
+N *  USB Reset Event Callback
+N *   Called automatically on USB Reset Event
+N */
+N
+N#if USB_RESET_EVENT
+X#if 1
+Nvoid USB_Reset_Event (void) {
+N  USB_ResetCore();
+N}
+N#endif
+N
+N
+N/*
+N *  USB Suspend Event Callback
+N *   Called automatically on USB Suspend Event
+N */
+N
+N#if USB_SUSPEND_EVENT
+X#if 0
+Svoid USB_Suspend_Event (void) {
+S}
+N#endif
+N
+N
+N/*
+N *  USB Resume Event Callback
+N *   Called automatically on USB Resume Event
+N */
+N
+N#if USB_RESUME_EVENT
+X#if 0
+Svoid USB_Resume_Event (void) {
+S}
+N#endif
+N
+N
+N/*
+N *  USB Remote Wakeup Event Callback
+N *   Called automatically on USB Remote Wakeup Event
+N */
+N
+N#if USB_WAKEUP_EVENT
+X#if 0
+Svoid USB_WakeUp_Event (void) {
+S}
+N#endif
+N
+N
+N/*
+N *  USB Start of Frame Event Callback
+N *   Called automatically on USB Start of Frame Event
+N */
+N
+N#if USB_SOF_EVENT
+X#if 1
+Nvoid USB_SOF_Event (void) {
+N#if USB_DMA == 0
+X#if 1 == 0
+S  if (USB_ReadEP(0x03, (BYTE *)&DataBuf[DataIn])) {
+S    /* Data Available */
+S    DataIn += P_S;                          /* Update Data In Index */
+S    DataIn &= B_S - 1;                      /* Adjust Data In Index */
+S    if (((DataIn - DataOut) & (B_S - 1)) == (B_S/2)) {
+S      DataRun = 1;                          /* Data Stream running */
+S    }
+S  } else {
+S    /* No Data */
+S    DataRun  = 0;                           /* Data Stream not running */
+S    DataOut  = DataIn;                      /* Initialize Data Indexes */
+S  }
+N#endif
+N}
+N#endif
+N
+N
+N/*
+N *  USB Error Event Callback
+N *   Called automatically on USB Error Event
+N *    Parameter:       error: Error Code
+N */
+N
+N#if USB_ERROR_EVENT
+X#if 0
+Svoid USB_Error_Event (uint32_t error) {
+S}
+N#endif
+N
+N
+N/*
+N *  USB Set Configuration Event Callback
+N *   Called automatically on USB Set Configuration Request
+N */
+N
+N#if USB_CONFIGURE_EVENT
+X#if 0
+Svoid USB_Configure_Event (void) {
+S
+S  if (USB_Configuration) {                  /* Check if USB is configured */
+S    /* add your code here */
+S  }
+S}
+N#endif
+N
+N
+N/*
+N *  USB Set Interface Event Callback
+N *   Called automatically on USB Set Interface Request
+N */
+N
+N#if USB_INTERFACE_EVENT
+X#if 0
+Svoid USB_Interface_Event (void) {
+S}
+N#endif
+N
+N
+N/*
+N *  USB Set/Clear Feature Event Callback
+N *   Called automatically on USB Set/Clear Feature Request
+N */
+N
+N#if USB_FEATURE_EVENT
+X#if 0
+Svoid USB_Feature_Event (void) {
+S}
+N#endif
+N
+N
+N#define P_EP(n) ((USB_EP_EVENT & (1 << (n))) ? USB_EndPoint##n : NULL)
+N
+N/* USB Endpoint Events Callback Pointers */
+Nvoid (* const USB_P_EP[16]) (uint32_t event) = {
+N  P_EP(0),
+X  ((0x0009 & (1 << (0))) ? USB_EndPoint0 : ((void *)0)),
+N  P_EP(1),
+X  ((0x0009 & (1 << (1))) ? USB_EndPoint1 : ((void *)0)),
+N  P_EP(2),
+X  ((0x0009 & (1 << (2))) ? USB_EndPoint2 : ((void *)0)),
+N  P_EP(3),
+X  ((0x0009 & (1 << (3))) ? USB_EndPoint3 : ((void *)0)),
+N  P_EP(4),
+X  ((0x0009 & (1 << (4))) ? USB_EndPoint4 : ((void *)0)),
+N  P_EP(5),
+X  ((0x0009 & (1 << (5))) ? USB_EndPoint5 : ((void *)0)),
+N  P_EP(6),
+X  ((0x0009 & (1 << (6))) ? USB_EndPoint6 : ((void *)0)),
+N  P_EP(7),
+X  ((0x0009 & (1 << (7))) ? USB_EndPoint7 : ((void *)0)),
+N  P_EP(8),
+X  ((0x0009 & (1 << (8))) ? USB_EndPoint8 : ((void *)0)),
+N  P_EP(9),
+X  ((0x0009 & (1 << (9))) ? USB_EndPoint9 : ((void *)0)),
+N  P_EP(10),
+X  ((0x0009 & (1 << (10))) ? USB_EndPoint10 : ((void *)0)),
+N  P_EP(11),
+X  ((0x0009 & (1 << (11))) ? USB_EndPoint11 : ((void *)0)),
+N  P_EP(12),
+X  ((0x0009 & (1 << (12))) ? USB_EndPoint12 : ((void *)0)),
+N  P_EP(13),
+X  ((0x0009 & (1 << (13))) ? USB_EndPoint13 : ((void *)0)),
+N  P_EP(14),
+X  ((0x0009 & (1 << (14))) ? USB_EndPoint14 : ((void *)0)),
+N  P_EP(15),
+X  ((0x0009 & (1 << (15))) ? USB_EndPoint15 : ((void *)0)),
+N};
+N
+N
+N/*
+N *  USB Endpoint 1 Event Callback
+N *   Called automatically on USB Endpoint 1 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint1 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 2 Event Callback
+N *   Called automatically on USB Endpoint 2 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint2 (uint32_t event) {
+N}
+N
+N/*
+N *  USB Endpoint 3 Event Callback
+N *   Called automatically on USB Endpoint 3 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint3 (uint32_t event) {
+N#if USB_DMA
+X#if 1
+N  USB_DMA_DESCRIPTOR DD;
+N
+N  if (event & USB_EVT_OUT_DMA_EOT) {
+X  if (event & 8) {
+N    /* End of Transfer */
+N    if (USB_DMA_BufAdr(0x03) != ((uint32_t)DataBuf + 2*DataIn)) {
+N      /* Data Available */
+N      DataIn += P_C*P_S;                    /* Update Data In Index */
+X      DataIn += 4*32;                     
+N      DataIn &= B_S - 1;                    /* Adjust Data In Index */
+X      DataIn &= (8*4*32) - 1;                     
+N      if (((DataIn - DataOut) & (B_S - 1)) == (B_S/2)) {
+X      if (((DataIn - DataOut) & ((8*4*32) - 1)) == ((8*4*32)/2)) {
+N        DataRun = 1;                        /* Data Stream running */
+N      }
+N    } else {
+N      /* No Data */
+N      DataRun = 0;                          /* Data Stream not running */
+N      DataOut = DataIn;                     /* Initialize Data Indexes */
+N    }
+N  }
+N  if (event & (USB_EVT_OUT_DMA_EOT) | (USB_EVT_OUT_DMA_NDR)) {
+X  if (event & (8) | (10)) {
+N    /* End of Transfer or New Descriptor Request */
+N    DD.BufAdr  = (uint32_t)DataBuf + 2*DataIn; /* DMA Buffer Address */
+N    DD.BufLen  = P_C;                       /* DMA Packet Count */
+X    DD.BufLen  = 4;                        
+N    DD.MaxSize = 0;                         /* Must be 0 for Iso Transfer */
+N    DD.InfoAdr = (uint32_t)InfoBuf;            /* Packet Info Buffer Address */
+N    DD.Cfg.Val = 0;                         /* Initial DMA Configuration */
+N    DD.Cfg.Type.IsoEP = 1;                  /* Iso Endpoint */
+N    USB_DMA_Setup (0x03, &DD);              /* Setup DMA */
+N    USB_DMA_Enable(0x03);                   /* Enable DMA */
+N  }
+N#else
+S  event = event;
+N#endif
+N}
+N
+N
+N/*
+N *  USB Endpoint 4 Event Callback
+N *   Called automatically on USB Endpoint 4 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint4 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 5 Event Callback
+N *   Called automatically on USB Endpoint 5 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint5 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 6 Event Callback
+N *   Called automatically on USB Endpoint 6 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint6 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 7 Event Callback
+N *   Called automatically on USB Endpoint 7 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint7 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 8 Event Callback
+N *   Called automatically on USB Endpoint 8 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint8 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 9 Event Callback
+N *   Called automatically on USB Endpoint 9 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint9 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 10 Event Callback
+N *   Called automatically on USB Endpoint 10 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint10 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 11 Event Callback
+N *   Called automatically on USB Endpoint 11 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint11 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 12 Event Callback
+N *   Called automatically on USB Endpoint 12 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint12 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 13 Event Callback
+N *   Called automatically on USB Endpoint 13 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint13 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 14 Event Callback
+N *   Called automatically on USB Endpoint 14 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint14 (uint32_t event) {
+N}
+N
+N
+N/*
+N *  USB Endpoint 15 Event Callback
+N *   Called automatically on USB Endpoint 15 Event
+N *    Parameter:       event
+N */
+N
+Nvoid USB_EndPoint15 (uint32_t event) {
+N}

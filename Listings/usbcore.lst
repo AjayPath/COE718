@@ -1,0 +1,2675 @@
+L 1 "usbcore.c"
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbcore.c
+N * Purpose: USB Core Module
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *----------------------------------------------------------------------------
+N * History:
+N *          V1.20 Added vendor specific requests
+N *                Changed string descriptor handling
+N *                Reworked Endpoint0
+N *          V1.00 Initial Version
+N *----------------------------------------------------------------------------*/
+N
+N#include "type.h"
+L 1 "type.h" 1
+N/*****************************************************************************
+N *   type.h:  Type definition Header file for NXP LPC17xx Family 
+N *   Microprocessors
+N *
+N *   Copyright(C) 2009, NXP Semiconductor
+N *   All rights reserved.
+N *
+N *   History
+N *   2009.05.25  ver 1.00    Prelimnary version, first Release
+N *
+N******************************************************************************/
+N#include <stdint.h>
+L 1 "C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h" 1
+N/* Copyright (C) ARM Ltd., 1999,2014 */
+N/* All rights reserved */
+N
+N/*
+N * RCS $Revision$
+N * Checkin $Date$
+N * Revising $Author: agrant $
+N */
+N
+N#ifndef __stdint_h
+N#define __stdint_h
+N#define __ARMCLIB_VERSION 5060037
+N
+N  #ifdef __INT64_TYPE__
+S    /* armclang predefines '__INT64_TYPE__' and '__INT64_C_SUFFIX__' */
+S    #define __INT64 __INT64_TYPE__
+N  #else
+N    /* armcc has builtin '__int64' which can be used in --strict mode */
+N    #define __INT64 __int64
+N    #define __INT64_C_SUFFIX__ ll
+N  #endif
+N  #define __PASTE2(x, y) x ## y
+N  #define __PASTE(x, y) __PASTE2(x, y)
+N  #define __INT64_C(x)  __ESCAPE__(__PASTE(x, __INT64_C_SUFFIX__))
+N  #define __UINT64_C(x)  __ESCAPE__(__PASTE(x ## u, __INT64_C_SUFFIX__))
+N  #if defined(__clang__) || (defined(__ARMCC_VERSION) && !defined(__STRICT_ANSI__))
+X  #if 0L || (1L && !0L)
+N    /* armclang and non-strict armcc allow 'long long' in system headers */
+N    #define __LONGLONG long long
+N  #else
+S    /* strict armcc has '__int64' */
+S    #define __LONGLONG __int64
+N  #endif
+N
+N  #ifndef __STDINT_DECLS
+N  #define __STDINT_DECLS
+N
+N    #undef __CLIBNS
+N
+N    #ifdef __cplusplus
+S      namespace std {
+S          #define __CLIBNS std::
+S          extern "C" {
+N    #else
+N      #define __CLIBNS
+N    #endif  /* __cplusplus */
+N
+N
+N/*
+N * 'signed' is redundant below, except for 'signed char' and if
+N * the typedef is used to declare a bitfield.
+N */
+N
+N    /* 7.18.1.1 */
+N
+N    /* exact-width signed integer types */
+Ntypedef   signed          char int8_t;
+Ntypedef   signed short     int int16_t;
+Ntypedef   signed           int int32_t;
+Ntypedef   signed       __INT64 int64_t;
+Xtypedef   signed       __int64 int64_t;
+N
+N    /* exact-width unsigned integer types */
+Ntypedef unsigned          char uint8_t;
+Ntypedef unsigned short     int uint16_t;
+Ntypedef unsigned           int uint32_t;
+Ntypedef unsigned       __INT64 uint64_t;
+Xtypedef unsigned       __int64 uint64_t;
+N
+N    /* 7.18.1.2 */
+N
+N    /* smallest type of at least n bits */
+N    /* minimum-width signed integer types */
+Ntypedef   signed          char int_least8_t;
+Ntypedef   signed short     int int_least16_t;
+Ntypedef   signed           int int_least32_t;
+Ntypedef   signed       __INT64 int_least64_t;
+Xtypedef   signed       __int64 int_least64_t;
+N
+N    /* minimum-width unsigned integer types */
+Ntypedef unsigned          char uint_least8_t;
+Ntypedef unsigned short     int uint_least16_t;
+Ntypedef unsigned           int uint_least32_t;
+Ntypedef unsigned       __INT64 uint_least64_t;
+Xtypedef unsigned       __int64 uint_least64_t;
+N
+N    /* 7.18.1.3 */
+N
+N    /* fastest minimum-width signed integer types */
+Ntypedef   signed           int int_fast8_t;
+Ntypedef   signed           int int_fast16_t;
+Ntypedef   signed           int int_fast32_t;
+Ntypedef   signed       __INT64 int_fast64_t;
+Xtypedef   signed       __int64 int_fast64_t;
+N
+N    /* fastest minimum-width unsigned integer types */
+Ntypedef unsigned           int uint_fast8_t;
+Ntypedef unsigned           int uint_fast16_t;
+Ntypedef unsigned           int uint_fast32_t;
+Ntypedef unsigned       __INT64 uint_fast64_t;
+Xtypedef unsigned       __int64 uint_fast64_t;
+N
+N    /* 7.18.1.4 integer types capable of holding object pointers */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+Stypedef   signed       __INT64 intptr_t;
+Stypedef unsigned       __INT64 uintptr_t;
+N#else
+Ntypedef   signed           int intptr_t;
+Ntypedef unsigned           int uintptr_t;
+N#endif
+N
+N    /* 7.18.1.5 greatest-width integer types */
+Ntypedef   signed     __LONGLONG intmax_t;
+Xtypedef   signed     long long intmax_t;
+Ntypedef unsigned     __LONGLONG uintmax_t;
+Xtypedef unsigned     long long uintmax_t;
+N
+N
+N#if !defined(__cplusplus) || defined(__STDC_LIMIT_MACROS)
+X#if !0L || 0L
+N
+N    /* 7.18.2.1 */
+N
+N    /* minimum values of exact-width signed integer types */
+N#define INT8_MIN                   -128
+N#define INT16_MIN                -32768
+N#define INT32_MIN          (~0x7fffffff)   /* -2147483648 is unsigned */
+N#define INT64_MIN  __INT64_C(~0x7fffffffffffffff) /* -9223372036854775808 is unsigned */
+N
+N    /* maximum values of exact-width signed integer types */
+N#define INT8_MAX                    127
+N#define INT16_MAX                 32767
+N#define INT32_MAX            2147483647
+N#define INT64_MAX  __INT64_C(9223372036854775807)
+N
+N    /* maximum values of exact-width unsigned integer types */
+N#define UINT8_MAX                   255
+N#define UINT16_MAX                65535
+N#define UINT32_MAX           4294967295u
+N#define UINT64_MAX __UINT64_C(18446744073709551615)
+N
+N    /* 7.18.2.2 */
+N
+N    /* minimum values of minimum-width signed integer types */
+N#define INT_LEAST8_MIN                   -128
+N#define INT_LEAST16_MIN                -32768
+N#define INT_LEAST32_MIN          (~0x7fffffff)
+N#define INT_LEAST64_MIN  __INT64_C(~0x7fffffffffffffff)
+N
+N    /* maximum values of minimum-width signed integer types */
+N#define INT_LEAST8_MAX                    127
+N#define INT_LEAST16_MAX                 32767
+N#define INT_LEAST32_MAX            2147483647
+N#define INT_LEAST64_MAX  __INT64_C(9223372036854775807)
+N
+N    /* maximum values of minimum-width unsigned integer types */
+N#define UINT_LEAST8_MAX                   255
+N#define UINT_LEAST16_MAX                65535
+N#define UINT_LEAST32_MAX           4294967295u
+N#define UINT_LEAST64_MAX __UINT64_C(18446744073709551615)
+N
+N    /* 7.18.2.3 */
+N
+N    /* minimum values of fastest minimum-width signed integer types */
+N#define INT_FAST8_MIN           (~0x7fffffff)
+N#define INT_FAST16_MIN          (~0x7fffffff)
+N#define INT_FAST32_MIN          (~0x7fffffff)
+N#define INT_FAST64_MIN  __INT64_C(~0x7fffffffffffffff)
+N
+N    /* maximum values of fastest minimum-width signed integer types */
+N#define INT_FAST8_MAX             2147483647
+N#define INT_FAST16_MAX            2147483647
+N#define INT_FAST32_MAX            2147483647
+N#define INT_FAST64_MAX  __INT64_C(9223372036854775807)
+N
+N    /* maximum values of fastest minimum-width unsigned integer types */
+N#define UINT_FAST8_MAX            4294967295u
+N#define UINT_FAST16_MAX           4294967295u
+N#define UINT_FAST32_MAX           4294967295u
+N#define UINT_FAST64_MAX __UINT64_C(18446744073709551615)
+N
+N    /* 7.18.2.4 */
+N
+N    /* minimum value of pointer-holding signed integer type */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define INTPTR_MIN INT64_MIN
+N#else
+N#define INTPTR_MIN INT32_MIN
+N#endif
+N
+N    /* maximum value of pointer-holding signed integer type */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define INTPTR_MAX INT64_MAX
+N#else
+N#define INTPTR_MAX INT32_MAX
+N#endif
+N
+N    /* maximum value of pointer-holding unsigned integer type */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define UINTPTR_MAX UINT64_MAX
+N#else
+N#define UINTPTR_MAX UINT32_MAX
+N#endif
+N
+N    /* 7.18.2.5 */
+N
+N    /* minimum value of greatest-width signed integer type */
+N#define INTMAX_MIN  __ESCAPE__(~0x7fffffffffffffffll)
+N
+N    /* maximum value of greatest-width signed integer type */
+N#define INTMAX_MAX  __ESCAPE__(9223372036854775807ll)
+N
+N    /* maximum value of greatest-width unsigned integer type */
+N#define UINTMAX_MAX __ESCAPE__(18446744073709551615ull)
+N
+N    /* 7.18.3 */
+N
+N    /* limits of ptrdiff_t */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define PTRDIFF_MIN INT64_MIN
+S#define PTRDIFF_MAX INT64_MAX
+N#else
+N#define PTRDIFF_MIN INT32_MIN
+N#define PTRDIFF_MAX INT32_MAX
+N#endif
+N
+N    /* limits of sig_atomic_t */
+N#define SIG_ATOMIC_MIN (~0x7fffffff)
+N#define SIG_ATOMIC_MAX   2147483647
+N
+N    /* limit of size_t */
+N#if __sizeof_ptr == 8
+X#if 4 == 8
+S#define SIZE_MAX UINT64_MAX
+N#else
+N#define SIZE_MAX UINT32_MAX
+N#endif
+N
+N    /* limits of wchar_t */
+N    /* NB we have to undef and redef because they're defined in both
+N     * stdint.h and wchar.h */
+N#undef WCHAR_MIN
+N#undef WCHAR_MAX
+N
+N#if defined(__WCHAR32) || (defined(__ARM_SIZEOF_WCHAR_T) && __ARM_SIZEOF_WCHAR_T == 4)
+X#if 0L || (0L && __ARM_SIZEOF_WCHAR_T == 4)
+S  #define WCHAR_MIN   0
+S  #define WCHAR_MAX   0xffffffffU
+N#else
+N  #define WCHAR_MIN   0
+N  #define WCHAR_MAX   65535
+N#endif
+N
+N    /* limits of wint_t */
+N#define WINT_MIN (~0x7fffffff)
+N#define WINT_MAX 2147483647
+N
+N#endif /* __STDC_LIMIT_MACROS */
+N
+N#if !defined(__cplusplus) || defined(__STDC_CONSTANT_MACROS)
+X#if !0L || 0L
+N
+N    /* 7.18.4.1 macros for minimum-width integer constants */
+N#define INT8_C(x)   (x)
+N#define INT16_C(x)  (x)
+N#define INT32_C(x)  (x)
+N#define INT64_C(x)  __INT64_C(x)
+N
+N#define UINT8_C(x)  (x ## u)
+N#define UINT16_C(x) (x ## u)
+N#define UINT32_C(x) (x ## u)
+N#define UINT64_C(x) __UINT64_C(x)
+N
+N    /* 7.18.4.2 macros for greatest-width integer constants */
+N#define INTMAX_C(x)  __ESCAPE__(x ## ll)
+N#define UINTMAX_C(x) __ESCAPE__(x ## ull)
+N
+N#endif /* __STDC_CONSTANT_MACROS */
+N
+N    #ifdef __cplusplus
+S         }  /* extern "C" */
+S      }  /* namespace std */
+N    #endif /* __cplusplus */
+N  #endif /* __STDINT_DECLS */
+N
+N  #ifdef __cplusplus
+S    #ifndef __STDINT_NO_EXPORTS
+S      using ::std::int8_t;
+S      using ::std::int16_t;
+S      using ::std::int32_t;
+S      using ::std::int64_t;
+S      using ::std::uint8_t;
+S      using ::std::uint16_t;
+S      using ::std::uint32_t;
+S      using ::std::uint64_t;
+S      using ::std::int_least8_t;
+S      using ::std::int_least16_t;
+S      using ::std::int_least32_t;
+S      using ::std::int_least64_t;
+S      using ::std::uint_least8_t;
+S      using ::std::uint_least16_t;
+S      using ::std::uint_least32_t;
+S      using ::std::uint_least64_t;
+S      using ::std::int_fast8_t;
+S      using ::std::int_fast16_t;
+S      using ::std::int_fast32_t;
+S      using ::std::int_fast64_t;
+S      using ::std::uint_fast8_t;
+S      using ::std::uint_fast16_t;
+S      using ::std::uint_fast32_t;
+S      using ::std::uint_fast64_t;
+S      using ::std::intptr_t;
+S      using ::std::uintptr_t;
+S      using ::std::intmax_t;
+S      using ::std::uintmax_t;
+S    #endif
+N  #endif /* __cplusplus */
+N
+N#undef __INT64
+N#undef __LONGLONG
+N
+N#endif /* __stdint_h */
+N
+N/* end of stdint.h */
+L 13 "type.h" 2
+N
+N#ifndef __TYPE_H__
+N#define __TYPE_H__
+N
+N#ifndef NULL
+N#define NULL    ((void *)0)
+N#endif
+N
+N#ifndef FALSE
+N#define FALSE   (0)
+N#endif
+N
+N#ifndef TRUE
+N#define TRUE    (1)
+N#endif
+N
+N
+Ntypedef enum {RESET = 0, SET = !RESET} FlagStatus, ITStatus;
+Ntypedef enum {DISABLE = 0, ENABLE = !DISABLE} FunctionalState;
+N
+N#endif  /* __TYPE_H__ */
+L 26 "usbcore.c" 2
+N
+N#include "usb.h"
+L 1 "usb.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usb.h
+N * Purpose: USB Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __USB_H__
+N#define __USB_H__
+N
+N
+Ntypedef __packed union {
+N  uint16_t W;
+N  __packed struct {
+N    uint8_t L;
+N    uint8_t H;
+N  } WB;
+N} WORD_BYTE;
+N
+N
+N/* bmRequestType.Dir */
+N#define REQUEST_HOST_TO_DEVICE     0
+N#define REQUEST_DEVICE_TO_HOST     1
+N
+N/* bmRequestType.Type */
+N#define REQUEST_STANDARD           0
+N#define REQUEST_CLASS              1
+N#define REQUEST_VENDOR             2
+N#define REQUEST_RESERVED           3
+N
+N/* bmRequestType.Recipient */
+N#define REQUEST_TO_DEVICE          0
+N#define REQUEST_TO_INTERFACE       1
+N#define REQUEST_TO_ENDPOINT        2
+N#define REQUEST_TO_OTHER           3
+N
+N/* bmRequestType Definition */
+Ntypedef __packed union _REQUEST_TYPE {
+N  __packed struct _BM {
+N    uint8_t Recipient : 5;
+N    uint8_t Type      : 2;
+N    uint8_t Dir       : 1;
+N  } BM;
+N  uint8_t B;
+N} REQUEST_TYPE;
+N
+N/* USB Standard Request Codes */
+N#define USB_REQUEST_GET_STATUS                 0
+N#define USB_REQUEST_CLEAR_FEATURE              1
+N#define USB_REQUEST_SET_FEATURE                3
+N#define USB_REQUEST_SET_ADDRESS                5
+N#define USB_REQUEST_GET_DESCRIPTOR             6
+N#define USB_REQUEST_SET_DESCRIPTOR             7
+N#define USB_REQUEST_GET_CONFIGURATION          8
+N#define USB_REQUEST_SET_CONFIGURATION          9
+N#define USB_REQUEST_GET_INTERFACE              10
+N#define USB_REQUEST_SET_INTERFACE              11
+N#define USB_REQUEST_SYNC_FRAME                 12
+N
+N/* USB GET_STATUS Bit Values */
+N#define USB_GETSTATUS_SELF_POWERED             0x01
+N#define USB_GETSTATUS_REMOTE_WAKEUP            0x02
+N#define USB_GETSTATUS_ENDPOINT_STALL           0x01
+N
+N/* USB Standard Feature selectors */
+N#define USB_FEATURE_ENDPOINT_STALL             0
+N#define USB_FEATURE_REMOTE_WAKEUP              1
+N
+N/* USB Default Control Pipe Setup Packet */
+Ntypedef __packed struct _USB_SETUP_PACKET {
+N  REQUEST_TYPE bmRequestType;
+N  uint8_t         bRequest;
+N  WORD_BYTE    wValue;
+N  WORD_BYTE    wIndex;
+N  uint16_t         wLength;
+N} USB_SETUP_PACKET;
+N
+N
+N/* USB Descriptor Types */
+N#define USB_DEVICE_DESCRIPTOR_TYPE                  1
+N#define USB_CONFIGURATION_DESCRIPTOR_TYPE           2
+N#define USB_STRING_DESCRIPTOR_TYPE                  3
+N#define USB_INTERFACE_DESCRIPTOR_TYPE               4
+N#define USB_ENDPOINT_DESCRIPTOR_TYPE                5
+N#define USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE        6
+N#define USB_OTHER_SPEED_CONFIG_DESCRIPTOR_TYPE      7
+N#define USB_INTERFACE_POWER_DESCRIPTOR_TYPE         8
+N#define USB_OTG_DESCRIPTOR_TYPE                     9
+N#define USB_DEBUG_DESCRIPTOR_TYPE                  10
+N#define USB_INTERFACE_ASSOCIATION_DESCRIPTOR_TYPE  11 
+N
+N/* USB Device Classes */
+N#define USB_DEVICE_CLASS_RESERVED              0x00
+N#define USB_DEVICE_CLASS_AUDIO                 0x01
+N#define USB_DEVICE_CLASS_COMMUNICATIONS        0x02
+N#define USB_DEVICE_CLASS_HUMAN_INTERFACE       0x03
+N#define USB_DEVICE_CLASS_MONITOR               0x04
+N#define USB_DEVICE_CLASS_PHYSICAL_INTERFACE    0x05
+N#define USB_DEVICE_CLASS_POWER                 0x06
+N#define USB_DEVICE_CLASS_PRINTER               0x07
+N#define USB_DEVICE_CLASS_STORAGE               0x08
+N#define USB_DEVICE_CLASS_HUB                   0x09
+N#define USB_DEVICE_CLASS_MISCELLANEOUS         0xEF
+N#define USB_DEVICE_CLASS_VENDOR_SPECIFIC       0xFF
+N
+N/* bmAttributes in Configuration Descriptor */
+N#define USB_CONFIG_POWERED_MASK                0x40
+N#define USB_CONFIG_BUS_POWERED                 0x80
+N#define USB_CONFIG_SELF_POWERED                0xC0
+N#define USB_CONFIG_REMOTE_WAKEUP               0x20
+N
+N/* bMaxPower in Configuration Descriptor */
+N#define USB_CONFIG_POWER_MA(mA)                ((mA)/2)
+N
+N/* bEndpointAddress in Endpoint Descriptor */
+N#define USB_ENDPOINT_DIRECTION_MASK            0x80
+N#define USB_ENDPOINT_OUT(addr)                 ((addr) | 0x00)
+N#define USB_ENDPOINT_IN(addr)                  ((addr) | 0x80)
+N
+N/* bmAttributes in Endpoint Descriptor */
+N#define USB_ENDPOINT_TYPE_MASK                 0x03
+N#define USB_ENDPOINT_TYPE_CONTROL              0x00
+N#define USB_ENDPOINT_TYPE_ISOCHRONOUS          0x01
+N#define USB_ENDPOINT_TYPE_BULK                 0x02
+N#define USB_ENDPOINT_TYPE_INTERRUPT            0x03
+N#define USB_ENDPOINT_SYNC_MASK                 0x0C
+N#define USB_ENDPOINT_SYNC_NO_SYNCHRONIZATION   0x00
+N#define USB_ENDPOINT_SYNC_ASYNCHRONOUS         0x04
+N#define USB_ENDPOINT_SYNC_ADAPTIVE             0x08
+N#define USB_ENDPOINT_SYNC_SYNCHRONOUS          0x0C
+N#define USB_ENDPOINT_USAGE_MASK                0x30
+N#define USB_ENDPOINT_USAGE_DATA                0x00
+N#define USB_ENDPOINT_USAGE_FEEDBACK            0x10
+N#define USB_ENDPOINT_USAGE_IMPLICIT_FEEDBACK   0x20
+N#define USB_ENDPOINT_USAGE_RESERVED            0x30
+N
+N/* USB Standard Device Descriptor */
+Ntypedef __packed struct _USB_DEVICE_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint16_t  bcdUSB;
+N  uint8_t  bDeviceClass;
+N  uint8_t  bDeviceSubClass;
+N  uint8_t  bDeviceProtocol;
+N  uint8_t  bMaxPacketSize0;
+N  uint16_t  idVendor;
+N  uint16_t  idProduct;
+N  uint16_t  bcdDevice;
+N  uint8_t  iManufacturer;
+N  uint8_t  iProduct;
+N  uint8_t  iSerialNumber;
+N  uint8_t  bNumConfigurations;
+N} USB_DEVICE_DESCRIPTOR;
+N
+N/* USB 2.0 Device Qualifier Descriptor */
+Ntypedef __packed struct _USB_DEVICE_QUALIFIER_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint16_t  bcdUSB;
+N  uint8_t  bDeviceClass;
+N  uint8_t  bDeviceSubClass;
+N  uint8_t  bDeviceProtocol;
+N  uint8_t  bMaxPacketSize0;
+N  uint8_t  bNumConfigurations;
+N  uint8_t  bReserved;
+N} USB_DEVICE_QUALIFIER_DESCRIPTOR;
+N
+N/* USB Standard Configuration Descriptor */
+Ntypedef __packed struct _USB_CONFIGURATION_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint16_t  wTotalLength;
+N  uint8_t  bNumInterfaces;
+N  uint8_t  bConfigurationValue;
+N  uint8_t  iConfiguration;
+N  uint8_t  bmAttributes;
+N  uint8_t  bMaxPower;
+N} USB_CONFIGURATION_DESCRIPTOR;
+N
+N/* USB Standard Interface Descriptor */
+Ntypedef __packed struct _USB_INTERFACE_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint8_t  bInterfaceNumber;
+N  uint8_t  bAlternateSetting;
+N  uint8_t  bNumEndpoints;
+N  uint8_t  bInterfaceClass;
+N  uint8_t  bInterfaceSubClass;
+N  uint8_t  bInterfaceProtocol;
+N  uint8_t  iInterface;
+N} USB_INTERFACE_DESCRIPTOR;
+N
+N/* USB Standard Endpoint Descriptor */
+Ntypedef __packed struct _USB_ENDPOINT_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint8_t  bEndpointAddress;
+N  uint8_t  bmAttributes;
+N  uint16_t  wMaxPacketSize;
+N  uint8_t  bInterval;
+N} USB_ENDPOINT_DESCRIPTOR;
+N
+N/* USB String Descriptor */
+Ntypedef __packed struct _USB_STRING_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N  uint16_t  bString/*[]*/;
+N} USB_STRING_DESCRIPTOR;
+N
+N/* USB Common Descriptor */
+Ntypedef __packed struct _USB_COMMON_DESCRIPTOR {
+N  uint8_t  bLength;
+N  uint8_t  bDescriptorType;
+N} USB_COMMON_DESCRIPTOR;
+N
+N
+N#endif  /* __USB_H__ */
+L 28 "usbcore.c" 2
+N#include "usbcfg.h"
+L 1 "usbcfg.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbcfg.h
+N * Purpose: USB Custom Configuration
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *----------------------------------------------------------------------------
+N * History:
+N *          V1.20 Added vendor specific support
+N *          V1.00 Initial Version
+N *----------------------------------------------------------------------------*/
+N
+N#ifndef __USBCFG_H__
+N#define __USBCFG_H__
+N
+N
+N//*** <<< Use Configuration Wizard in Context Menu >>> ***
+N
+N
+N/*
+N// <h> USB Configuration
+N//   <o0> USB Power
+N//        <i> Default Power Setting
+N//        <0=> Bus-powered
+N//        <1=> Self-powered
+N//   <o1> Max Number of Interfaces <1-256>
+N//   <o2> Max Number of Endpoints  <1-32>
+N//   <o3> Max Endpoint 0 Packet Size
+N//        <8=> 8 Bytes <16=> 16 Bytes <32=> 32 Bytes <64=> 64 Bytes
+N//   <e4> DMA Transfer
+N//     <i> Use DMA for selected Endpoints
+N//     <o5.0>  Endpoint 0 Out
+N//     <o5.1>  Endpoint 0 In
+N//     <o5.2>  Endpoint 1 Out
+N//     <o5.3>  Endpoint 1 In
+N//     <o5.4>  Endpoint 2 Out
+N//     <o5.5>  Endpoint 2 In
+N//     <o5.6>  Endpoint 3 Out
+N//     <o5.7>  Endpoint 3 In
+N//     <o5.8>  Endpoint 4 Out
+N//     <o5.9>  Endpoint 4 In
+N//     <o5.10> Endpoint 5 Out
+N//     <o5.11> Endpoint 5 In
+N//     <o5.12> Endpoint 6 Out
+N//     <o5.13> Endpoint 6 In
+N//     <o5.14> Endpoint 7 Out
+N//     <o5.15> Endpoint 7 In
+N//     <o5.16> Endpoint 8 Out
+N//     <o5.17> Endpoint 8 In
+N//     <o5.18> Endpoint 9 Out
+N//     <o5.19> Endpoint 9 In
+N//     <o5.20> Endpoint 10 Out
+N//     <o5.21> Endpoint 10 In
+N//     <o5.22> Endpoint 11 Out
+N//     <o5.23> Endpoint 11 In
+N//     <o5.24> Endpoint 12 Out
+N//     <o5.25> Endpoint 12 In
+N//     <o5.26> Endpoint 13 Out
+N//     <o5.27> Endpoint 13 In
+N//     <o5.28> Endpoint 14 Out
+N//     <o5.29> Endpoint 14 In
+N//     <o5.30> Endpoint 15 Out
+N//     <o5.31> Endpoint 15 In
+N//   </e>
+N// </h>
+N*/
+N
+N#define USB_POWER           0
+N#define USB_IF_NUM          4
+N#define USB_EP_NUM          32
+N#define USB_MAX_PACKET0     64
+N#define USB_DMA             1
+N#define USB_DMA_EP          0x00000040
+N
+N
+N/*
+N// <h> USB Event Handlers
+N//   <h> Device Events
+N//     <o0.0> Power Event
+N//     <o1.0> Reset Event
+N//     <o2.0> Suspend Event
+N//     <o3.0> Resume Event
+N//     <o4.0> Remote Wakeup Event
+N//     <o5.0> Start of Frame Event
+N//     <o6.0> Error Event
+N//   </h>
+N//   <h> Endpoint Events
+N//     <o7.0>  Endpoint 0 Event
+N//     <o7.1>  Endpoint 1 Event
+N//     <o7.2>  Endpoint 2 Event
+N//     <o7.3>  Endpoint 3 Event
+N//     <o7.4>  Endpoint 4 Event
+N//     <o7.5>  Endpoint 5 Event
+N//     <o7.6>  Endpoint 6 Event
+N//     <o7.7>  Endpoint 7 Event
+N//     <o7.8>  Endpoint 8 Event
+N//     <o7.9>  Endpoint 9 Event
+N//     <o7.10> Endpoint 10 Event
+N//     <o7.11> Endpoint 11 Event
+N//     <o7.12> Endpoint 12 Event
+N//     <o7.13> Endpoint 13 Event
+N//     <o7.14> Endpoint 14 Event
+N//     <o7.15> Endpoint 15 Event
+N//   </h>
+N//   <h> USB Core Events
+N//     <o8.0>  Set Configuration Event
+N//     <o9.0>  Set Interface Event
+N//     <o10.0> Set/Clear Feature Event
+N//   </h>
+N// </h>
+N*/
+N
+N#define USB_POWER_EVENT     0
+N#define USB_RESET_EVENT     1
+N#define USB_SUSPEND_EVENT   0
+N#define USB_RESUME_EVENT    0
+N#define USB_WAKEUP_EVENT    0
+N#define USB_SOF_EVENT       1
+N#define USB_ERROR_EVENT     0
+N#define USB_EP_EVENT        0x0009
+N#define USB_CONFIGURE_EVENT 0
+N#define USB_INTERFACE_EVENT 0
+N#define USB_FEATURE_EVENT   0
+N
+N
+N/*
+N// <e0> USB Class Support
+N//   <i> enables USB Class specific Requests
+N//   <e1> Human Interface Device (HID)
+N//     <o2> Interface Number <0-255>
+N//   </e>
+N//   <e3> Mass Storage
+N//     <o4> Interface Number <0-255>
+N//   </e>
+N//   <e5> Audio Device
+N//     <o6> Control Interface Number <0-255>
+N//     <o7> Streaming Interface 1 Number <0-255>
+N//     <o8> Streaming Interface 2 Number <0-255>
+N//   </e>
+N//   <e9> Communication Device
+N//     <o10> Control Interface Number <0-255>
+N//     <o11> Bulk Interface Number <0-255>
+N//     <o12> Max Communication Device Buffer Size
+N//        <8=> 8 Bytes <16=> 16 Bytes <32=> 32 Bytes <64=> 64 Bytes 
+N//   </e>
+N// </e>
+N*/
+N
+N#define USB_CLASS           1
+N#define USB_HID             0
+N#define USB_HID_IF_NUM      0
+N#define USB_MSC             0
+N#define USB_MSC_IF_NUM      0
+N#define USB_AUDIO           1
+N#define USB_ADC_CIF_NUM     0
+N#define USB_ADC_SIF1_NUM    1
+N#define USB_ADC_SIF2_NUM    2
+N#define USB_CDC  			0
+N#define USB_CDC_CIF_NUM     0
+N#define USB_CDC_DIF_NUM     1
+N#define USB_CDC_BUFSIZE     64
+N
+N/*
+N// <e0> USB Vendor Support
+N//   <i> enables USB Vendor specific Requests
+N// </e>
+N*/
+N#define USB_VENDOR          0
+N
+N
+N#endif  /* __USBCFG_H__ */
+L 29 "usbcore.c" 2
+N#include "usbhw.h"
+L 1 "usbhw.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbhw.h
+N * Purpose: USB Hardware Layer Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *----------------------------------------------------------------------------
+N * History:
+N *          V1.20 Added USB_ClearEPBuf 
+N *          V1.00 Initial Version
+N *----------------------------------------------------------------------------*/
+N
+N#ifndef __USBHW_H__
+N#define __USBHW_H__
+N
+N
+N/* USB RAM Definitions */
+N#define USB_RAM_ADR     0x20080000  /* USB RAM Start Address */
+N#define USB_RAM_SZ      0x00004000  /* USB RAM Size (4kB) */
+N
+N/* DMA Endpoint Descriptors */
+N#define DD_NISO_CNT             16  /* Non-Iso EP DMA Descr. Count (max. 32) */
+N#define DD_ISO_CNT               8  /* Iso EP DMA Descriptor Count (max. 32) */
+N#define DD_NISO_SZ    (DD_NISO_CNT * 16)    /* Non-Iso DMA Descr. Size */
+N#define DD_ISO_SZ     (DD_ISO_CNT  * 20)    /* Iso DMA Descriptor Size */
+N#define DD_NISO_ADR   (USB_RAM_ADR + 128)   /* Non-Iso DMA Descr. Address */
+N#define DD_ISO_ADR    (DD_NISO_ADR + DD_NISO_SZ) /* Iso DMA Descr. Address */
+N#define DD_SZ                 (128 + DD_NISO_SZ + DD_ISO_SZ) /* Descr. Size */
+N
+N/* DMA Buffer Memory Definitions */
+N#define DMA_BUF_ADR   (USB_RAM_ADR + DD_SZ) /* DMA Buffer Start Address */
+N#define DMA_BUF_SZ    (USB_RAM_SZ  - DD_SZ) /* DMA Buffer Size */
+N
+N/* USB Error Codes */
+N#define USB_ERR_PID         0x0001  /* PID Error */
+N#define USB_ERR_UEPKT       0x0002  /* Unexpected Packet */
+N#define USB_ERR_DCRC        0x0004  /* Data CRC Error */
+N#define USB_ERR_TIMOUT      0x0008  /* Bus Time-out Error */
+N#define USB_ERR_EOP         0x0010  /* End of Packet Error */
+N#define USB_ERR_B_OVRN      0x0020  /* Buffer Overrun */
+N#define USB_ERR_BTSTF       0x0040  /* Bit Stuff Error */
+N#define USB_ERR_TGL         0x0080  /* Toggle Bit Error */
+N
+N/* USB DMA Status Codes */
+N#define USB_DMA_INVALID     0x0000  /* DMA Invalid - Not Configured */
+N#define USB_DMA_IDLE        0x0001  /* DMA Idle - Waiting for Trigger */
+N#define USB_DMA_BUSY        0x0002  /* DMA Busy - Transfer in progress */
+N#define USB_DMA_DONE        0x0003  /* DMA Transfer Done (no Errors)*/
+N#define USB_DMA_OVER_RUN    0x0004  /* Data Over Run */
+N#define USB_DMA_UNDER_RUN   0x0005  /* Data Under Run (Short Packet) */
+N#define USB_DMA_ERROR       0x0006  /* Error */
+N#define USB_DMA_UNKNOWN     0xFFFF  /* Unknown State */
+N
+N/* USB DMA Descriptor */
+Ntypedef struct _USB_DMA_DESCRIPTOR {
+N  uint32_t BufAdr;                     /* DMA Buffer Address */
+N  uint16_t  BufLen;                     /* DMA Buffer Length */
+N  uint16_t  MaxSize;                    /* Maximum Packet Size */
+N  uint32_t InfoAdr;                    /* Packet Info Memory Address */
+N  union {                           /* DMA Configuration */
+N    struct {
+N      uint32_t Link   : 1;             /* Link to existing Descriptors */
+N      uint32_t IsoEP  : 1;             /* Isonchronous Endpoint */
+N      uint32_t ATLE   : 1;             /* ATLE (Auto Transfer Length Extract) */
+N      uint32_t Rsrvd  : 5;             /* Reserved */
+N      uint32_t LenPos : 8;             /* Length Position (ATLE) */
+N    } Type;
+N    uint32_t Val;
+N  } Cfg;
+N} USB_DMA_DESCRIPTOR;
+N
+N/* USB Hardware Functions */
+Nextern void  USB_Init       (void);
+Nextern void  USB_Connect    (uint32_t  con);
+Nextern void  USB_Reset      (void);
+Nextern void  USB_Suspend    (void);
+Nextern void  USB_Resume     (void);
+Nextern void  USB_WakeUp     (void);
+Nextern void  USB_WakeUpCfg  (uint32_t  cfg);
+Nextern void  USB_SetAddress (uint32_t adr);
+Nextern void  USB_Configure  (uint32_t  cfg);
+Nextern void  USB_ConfigEP   (USB_ENDPOINT_DESCRIPTOR *pEPD);
+Nextern void  USB_DirCtrlEP  (uint32_t dir);
+Nextern void  USB_EnableEP   (uint32_t EPNum);
+Nextern void  USB_DisableEP  (uint32_t EPNum);
+Nextern void  USB_ResetEP    (uint32_t EPNum);
+Nextern void  USB_SetStallEP (uint32_t EPNum);
+Nextern void  USB_ClrStallEP (uint32_t EPNum);
+Nextern void USB_ClearEPBuf  (uint32_t  EPNum);
+Nextern uint32_t USB_ReadEP     (uint32_t EPNum, uint8_t *pData);
+Nextern uint32_t USB_WriteEP    (uint32_t EPNum, uint8_t *pData, uint32_t cnt);
+Nextern uint32_t  USB_DMA_Setup  (uint32_t EPNum, USB_DMA_DESCRIPTOR *pDD);
+Nextern void  USB_DMA_Enable (uint32_t EPNum);
+Nextern void  USB_DMA_Disable(uint32_t EPNum);
+Nextern uint32_t USB_DMA_Status (uint32_t EPNum);
+Nextern uint32_t USB_DMA_BufAdr (uint32_t EPNum);
+Nextern uint32_t USB_DMA_BufCnt (uint32_t EPNum);
+Nextern uint32_t USB_GetFrame   (void);
+Nextern void  USB_IRQHandler (void);
+N
+N
+N#endif  /* __USBHW_H__ */
+L 30 "usbcore.c" 2
+N#include "usbcore.h"
+L 1 "usbcore.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbcore.h
+N * Purpose: USB Core Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __USBCORE_H__
+N#define __USBCORE_H__
+N
+N
+N/* USB Endpoint Data Structure */
+Ntypedef struct _USB_EP_DATA {
+N  uint8_t  *pData;
+N  uint16_t Count;
+N} USB_EP_DATA;
+N
+N/* USB Core Global Variables */
+Nextern uint16_t USB_DeviceStatus;
+Nextern uint8_t  USB_DeviceAddress;
+Nextern uint8_t  USB_Configuration;
+Nextern uint32_t USB_EndPointMask;
+Nextern uint32_t USB_EndPointHalt;
+Nextern uint32_t USB_EndPointStall;
+Nextern uint8_t  USB_AltSetting[USB_IF_NUM];
+Xextern uint8_t  USB_AltSetting[4];
+N
+N/* USB Endpoint 0 Buffer */
+Nextern uint8_t  EP0Buf[USB_MAX_PACKET0];
+Xextern uint8_t  EP0Buf[64];
+N
+N/* USB Endpoint 0 Data Info */
+Nextern USB_EP_DATA EP0Data;
+N
+N/* USB Setup Packet */
+Nextern USB_SETUP_PACKET SetupPacket;
+N
+N/* USB Core Functions */
+Nextern void USB_ResetCore (void);
+N
+N
+N
+N#endif  /* __USBCORE_H__ */
+L 31 "usbcore.c" 2
+N#include "usbdesc.h"
+L 1 "usbdesc.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbdesc.h
+N * Purpose: USB Descriptors Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __USBDESC_H__
+N#define __USBDESC_H__
+N
+N
+N#define WBVAL(x) (x & 0xFF),((x >> 8) & 0xFF)
+N#define B3VAL(x) (x & 0xFF),((x >> 8) & 0xFF),((x >> 16) & 0xFF)
+N
+N#define USB_DEVICE_DESC_SIZE        (sizeof(USB_DEVICE_DESCRIPTOR))
+N#define USB_CONFIGUARTION_DESC_SIZE (sizeof(USB_CONFIGURATION_DESCRIPTOR))
+N#define USB_INTERFACE_DESC_SIZE     (sizeof(USB_INTERFACE_DESCRIPTOR))
+N#define USB_ENDPOINT_DESC_SIZE      (sizeof(USB_ENDPOINT_DESCRIPTOR))
+N
+Nextern const uint8_t USB_DeviceDescriptor[];
+Nextern const uint8_t USB_ConfigDescriptor[];
+Nextern const uint8_t USB_StringDescriptor[];
+N
+N
+N#endif  /* __USBDESC_H__ */
+L 32 "usbcore.c" 2
+N#include "usbuser.h"
+L 1 "usbuser.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N * Name:    usbuser.h
+N * Purpose: USB Custom User Definitions
+N * Version: V1.20
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on NXP Semiconductors LPC family microcontroller devices only. Nothing 
+N *      else gives you the right to use this software.
+N *
+N * Copyright (c) 2009 Keil - An ARM Company. All rights reserved.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __USBUSER_H__
+N#define __USBUSER_H__
+N
+N
+N/* USB Device Events Callback Functions */
+Nextern void USB_Power_Event     (uint32_t  power);
+Nextern void USB_Reset_Event     (void);
+Nextern void USB_Suspend_Event   (void);
+Nextern void USB_Resume_Event    (void);
+Nextern void USB_WakeUp_Event    (void);
+Nextern void USB_SOF_Event       (void);
+Nextern void USB_Error_Event     (uint32_t error);
+N
+N/* USB Endpoint Callback Events */
+N#define USB_EVT_SETUP       1   /* Setup Packet */
+N#define USB_EVT_OUT         2   /* OUT Packet */
+N#define USB_EVT_IN          3   /*  IN Packet */
+N#define USB_EVT_OUT_NAK     4   /* OUT Packet - Not Acknowledged */
+N#define USB_EVT_IN_NAK      5   /*  IN Packet - Not Acknowledged */
+N#define USB_EVT_OUT_STALL   6   /* OUT Packet - Stalled */
+N#define USB_EVT_IN_STALL    7   /*  IN Packet - Stalled */
+N#define USB_EVT_OUT_DMA_EOT 8   /* DMA OUT EP - End of Transfer */
+N#define USB_EVT_IN_DMA_EOT  9   /* DMA  IN EP - End of Transfer */
+N#define USB_EVT_OUT_DMA_NDR 10  /* DMA OUT EP - New Descriptor Request */
+N#define USB_EVT_IN_DMA_NDR  11  /* DMA  IN EP - New Descriptor Request */
+N#define USB_EVT_OUT_DMA_ERR 12  /* DMA OUT EP - Error */
+N#define USB_EVT_IN_DMA_ERR  13  /* DMA  IN EP - Error */
+N
+N/* USB Endpoint Events Callback Pointers */
+Nextern void (* const USB_P_EP[16])(uint32_t event);
+N
+N/* USB Endpoint Events Callback Functions */
+Nextern void USB_EndPoint0  (uint32_t event);
+Nextern void USB_EndPoint1  (uint32_t event);
+Nextern void USB_EndPoint2  (uint32_t event);
+Nextern void USB_EndPoint3  (uint32_t event);
+Nextern void USB_EndPoint4  (uint32_t event);
+Nextern void USB_EndPoint5  (uint32_t event);
+Nextern void USB_EndPoint6  (uint32_t event);
+Nextern void USB_EndPoint7  (uint32_t event);
+Nextern void USB_EndPoint8  (uint32_t event);
+Nextern void USB_EndPoint9  (uint32_t event);
+Nextern void USB_EndPoint10 (uint32_t event);
+Nextern void USB_EndPoint11 (uint32_t event);
+Nextern void USB_EndPoint12 (uint32_t event);
+Nextern void USB_EndPoint13 (uint32_t event);
+Nextern void USB_EndPoint14 (uint32_t event);
+Nextern void USB_EndPoint15 (uint32_t event);
+N
+N/* USB Core Events Callback Functions */
+Nextern void USB_Configure_Event (void);
+Nextern void USB_Interface_Event (void);
+Nextern void USB_Feature_Event   (void);
+N
+N
+N#endif  /* __USBUSER_H__ */
+L 33 "usbcore.c" 2
+N
+N#if (USB_CLASS)
+X#if (1)
+N
+N#if (USB_AUDIO)
+X#if (1)
+N#include "audio.h"
+L 1 "audio.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N *      Name:    AUDIO.H
+N *      Purpose: USB Audio Device Class Definitions
+N *      Version: V1.10
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on Philips LPC2xxx microcontroller devices only. Nothing else gives
+N *      you the right to use this software.
+N *
+N *      Copyright (c) 2005-2006 Keil Software.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __AUDIO_H__
+N#define __AUDIO_H__
+N
+N
+N/* Audio Interface Subclass Codes */
+N#define AUDIO_SUBCLASS_UNDEFINED                0x00
+N#define AUDIO_SUBCLASS_AUDIOCONTROL             0x01
+N#define AUDIO_SUBCLASS_AUDIOSTREAMING           0x02
+N#define AUDIO_SUBCLASS_MIDISTREAMING            0x03
+N
+N/* Audio Interface Protocol Codes */
+N#define AUDIO_PROTOCOL_UNDEFINED                0x00
+N
+N
+N/* Audio Descriptor Types */
+N#define AUDIO_UNDEFINED_DESCRIPTOR_TYPE         0x20
+N#define AUDIO_DEVICE_DESCRIPTOR_TYPE            0x21
+N#define AUDIO_CONFIGURATION_DESCRIPTOR_TYPE     0x22
+N#define AUDIO_STRING_DESCRIPTOR_TYPE            0x23
+N#define AUDIO_INTERFACE_DESCRIPTOR_TYPE         0x24
+N#define AUDIO_ENDPOINT_DESCRIPTOR_TYPE          0x25
+N
+N
+N/* Audio Control Interface Descriptor Subtypes */
+N#define AUDIO_CONTROL_UNDEFINED                 0x00
+N#define AUDIO_CONTROL_HEADER                    0x01
+N#define AUDIO_CONTROL_INPUT_TERMINAL            0x02
+N#define AUDIO_CONTROL_OUTPUT_TERMINAL           0x03
+N#define AUDIO_CONTROL_MIXER_UNIT                0x04
+N#define AUDIO_CONTROL_SELECTOR_UNIT             0x05
+N#define AUDIO_CONTROL_FEATURE_UNIT              0x06
+N#define AUDIO_CONTROL_PROCESSING_UNIT           0x07
+N#define AUDIO_CONTROL_EXTENSION_UNIT            0x08
+N
+N/* Audio Streaming Interface Descriptor Subtypes */
+N#define AUDIO_STREAMING_UNDEFINED               0x00
+N#define AUDIO_STREAMING_GENERAL                 0x01
+N#define AUDIO_STREAMING_FORMAT_TYPE             0x02
+N#define AUDIO_STREAMING_FORMAT_SPECIFIC         0x03
+N
+N/* Audio Endpoint Descriptor Subtypes */
+N#define AUDIO_ENDPOINT_UNDEFINED                0x00
+N#define AUDIO_ENDPOINT_GENERAL                  0x01
+N
+N
+N/* Audio Descriptor Sizes */
+N#define AUDIO_CONTROL_INTERFACE_DESC_SZ(n)      0x08+n
+N#define AUDIO_STREAMING_INTERFACE_DESC_SIZE     0x07
+N#define AUDIO_INPUT_TERMINAL_DESC_SIZE          0x0C
+N#define AUDIO_OUTPUT_TERMINAL_DESC_SIZE         0x09
+N#define AUDIO_MIXER_UNIT_DESC_SZ(p,n)           0x0A+p+n
+N#define AUDIO_SELECTOR_UNIT_DESC_SZ(p)          0x06+p
+N#define AUDIO_FEATURE_UNIT_DESC_SZ(ch,n)        0x07+(ch+1)*n
+N#define AUDIO_PROCESSING_UNIT_DESC_SZ(p,n,x)    0x0D+p+n+x
+N#define AUDIO_EXTENSION_UNIT_DESC_SZ(p,n)       0x0D+p+n
+N#define AUDIO_STANDARD_ENDPOINT_DESC_SIZE       0x09
+N#define AUDIO_STREAMING_ENDPOINT_DESC_SIZE      0x07
+N
+N
+N/* Audio Processing Unit Process Types */
+N#define AUDIO_UNDEFINED_PROCESS                 0x00
+N#define AUDIO_UP_DOWN_MIX_PROCESS               0x01
+N#define AUDIO_DOLBY_PROLOGIC_PROCESS            0x02
+N#define AUDIO_3D_STEREO_PROCESS                 0x03
+N#define AUDIO_REVERBERATION_PROCESS             0x04
+N#define AUDIO_CHORUS_PROCESS                    0x05
+N#define AUDIO_DYN_RANGE_COMP_PROCESS            0x06
+N
+N
+N/* Audio Request Codes */
+N#define AUDIO_REQUEST_UNDEFINED                 0x00
+N#define AUDIO_REQUEST_SET_CUR                   0x01
+N#define AUDIO_REQUEST_GET_CUR                   0x81
+N#define AUDIO_REQUEST_SET_MIN                   0x02
+N#define AUDIO_REQUEST_GET_MIN                   0x82
+N#define AUDIO_REQUEST_SET_MAX                   0x03
+N#define AUDIO_REQUEST_GET_MAX                   0x83
+N#define AUDIO_REQUEST_SET_RES                   0x04
+N#define AUDIO_REQUEST_GET_RES                   0x84
+N#define AUDIO_REQUEST_SET_MEM                   0x05
+N#define AUDIO_REQUEST_GET_MEM                   0x85
+N#define AUDIO_REQUEST_GET_STAT                  0xFF
+N
+N
+N/* Audio Control Selector Codes */
+N#define AUDIO_CONTROL_UNDEFINED                 0x00    /* Common Selector */
+N
+N/*  Terminal Control Selectors */
+N#define AUDIO_COPY_PROTECT_CONTROL              0x01
+N
+N/*  Feature Unit Control Selectors */
+N#define AUDIO_MUTE_CONTROL                      0x01
+N#define AUDIO_VOLUME_CONTROL                    0x02
+N#define AUDIO_BASS_CONTROL                      0x03
+N#define AUDIO_MID_CONTROL                       0x04
+N#define AUDIO_TREBLE_CONTROL                    0x05
+N#define AUDIO_GRAPHIC_EQUALIZER_CONTROL         0x06
+N#define AUDIO_AUTOMATIC_GAIN_CONTROL            0x07
+N#define AUDIO_DELAY_CONTROL                     0x08
+N#define AUDIO_BASS_BOOST_CONTROL                0x09
+N#define AUDIO_LOUDNESS_CONTROL                  0x0A
+N
+N/*  Processing Unit Control Selectors: */
+N#define AUDIO_ENABLE_CONTROL                    0x01    /* Common Selector */
+N#define AUDIO_MODE_SELECT_CONTROL               0x02    /* Common Selector */
+N
+N/*  - Up/Down-mix Control Selectors */
+N/*      AUDIO_ENABLE_CONTROL                    0x01       Common Selector */
+N/*      AUDIO_MODE_SELECT_CONTROL               0x02       Common Selector */
+N
+N/*  - Dolby Prologic Control Selectors */
+N/*      AUDIO_ENABLE_CONTROL                    0x01       Common Selector */
+N/*      AUDIO_MODE_SELECT_CONTROL               0x02       Common Selector */
+N
+N/*  - 3D Stereo Extender Control Selectors */
+N/*      AUDIO_ENABLE_CONTROL                    0x01       Common Selector */
+N#define AUDIO_SPACIOUSNESS_CONTROL              0x02
+N
+N/*  - Reverberation Control Selectors */
+N/*      AUDIO_ENABLE_CONTROL                    0x01       Common Selector */
+N#define AUDIO_REVERB_LEVEL_CONTROL              0x02
+N#define AUDIO_REVERB_TIME_CONTROL               0x03
+N#define AUDIO_REVERB_FEEDBACK_CONTROL           0x04
+N
+N/*  - Chorus Control Selectors */
+N/*      AUDIO_ENABLE_CONTROL                    0x01       Common Selector */
+N#define AUDIO_CHORUS_LEVEL_CONTROL              0x02
+N#define AUDIO_SHORUS_RATE_CONTROL               0x03
+N#define AUDIO_CHORUS_DEPTH_CONTROL              0x04
+N
+N/*  - Dynamic Range Compressor Control Selectors */
+N/*      AUDIO_ENABLE_CONTROL                    0x01       Common Selector */
+N#define AUDIO_COMPRESSION_RATE_CONTROL          0x02
+N#define AUDIO_MAX_AMPL_CONTROL                  0x03
+N#define AUDIO_THRESHOLD_CONTROL                 0x04
+N#define AUDIO_ATTACK_TIME_CONTROL               0x05
+N#define AUDIO_RELEASE_TIME_CONTROL              0x06
+N
+N/*  Extension Unit Control Selectors */
+N/*      AUDIO_ENABLE_CONTROL                    0x01       Common Selector */
+N
+N/*  Endpoint Control Selectors */
+N#define AUDIO_SAMPLING_FREQ_CONTROL             0x01
+N#define AUDIO_PITCH_CONTROL                     0x02
+N
+N
+N/* Audio Format Specific Control Selectors */
+N
+N/*  MPEG Control Selectors */
+N#define AUDIO_MPEG_CONTROL_UNDEFINED            0x00
+N#define AUDIO_MPEG_DUAL_CHANNEL_CONTROL         0x01
+N#define AUDIO_MPEG_SECOND_STEREO_CONTROL        0x02
+N#define AUDIO_MPEG_MULTILINGUAL_CONTROL         0x03
+N#define AUDIO_MPEG_DYN_RANGE_CONTROL            0x04
+N#define AUDIO_MPEG_SCALING_CONTROL              0x05
+N#define AUDIO_MPEG_HILO_SCALING_CONTROL         0x06
+N
+N/*  AC-3 Control Selectors */
+N#define AUDIO_AC3_CONTROL_UNDEFINED             0x00
+N#define AUDIO_AC3_MODE_CONTROL                  0x01
+N#define AUDIO_AC3_DYN_RANGE_CONTROL             0x02
+N#define AUDIO_AC3_SCALING_CONTROL               0x03
+N#define AUDIO_AC3_HILO_SCALING_CONTROL          0x04
+N
+N
+N/* Audio Format Types */
+N#define AUDIO_FORMAT_TYPE_UNDEFINED             0x00
+N#define AUDIO_FORMAT_TYPE_I                     0x01
+N#define AUDIO_FORMAT_TYPE_II                    0x02
+N#define AUDIO_FORMAT_TYPE_III                   0x03
+N
+N
+N/* Audio Format Type Descriptor Sizes */
+N#define AUDIO_FORMAT_TYPE_I_DESC_SZ(n)          0x08+(n*3)
+N#define AUDIO_FORMAT_TYPE_II_DESC_SZ(n)         0x09+(n*3)
+N#define AUDIO_FORMAT_TYPE_III_DESC_SZ(n)        0x08+(n*3)
+N#define AUDIO_FORMAT_MPEG_DESC_SIZE             0x09
+N#define AUDIO_FORMAT_AC3_DESC_SIZE              0x0A
+N
+N
+N/* Audio Data Format Codes */
+N
+N/*  Audio Data Format Type I Codes */
+N#define AUDIO_FORMAT_TYPE_I_UNDEFINED           0x0000
+N#define AUDIO_FORMAT_PCM                        0x0001
+N#define AUDIO_FORMAT_PCM8                       0x0002
+N#define AUDIO_FORMAT_IEEE_FLOAT                 0x0003
+N#define AUDIO_FORMAT_ALAW                       0x0004
+N#define AUDIO_FORMAT_MULAW                      0x0005
+N
+N/*  Audio Data Format Type II Codes */
+N#define AUDIO_FORMAT_TYPE_II_UNDEFINED          0x1000
+N#define AUDIO_FORMAT_MPEG                       0x1001
+N#define AUDIO_FORMAT_AC3                        0x1002
+N
+N/*  Audio Data Format Type III Codes */
+N#define AUDIO_FORMAT_TYPE_III_UNDEFINED         0x2000
+N#define AUDIO_FORMAT_IEC1937_AC3                0x2001
+N#define AUDIO_FORMAT_IEC1937_MPEG1_L1           0x2002
+N#define AUDIO_FORMAT_IEC1937_MPEG1_L2_3         0x2003
+N#define AUDIO_FORMAT_IEC1937_MPEG2_NOEXT        0x2003
+N#define AUDIO_FORMAT_IEC1937_MPEG2_EXT          0x2004
+N#define AUDIO_FORMAT_IEC1937_MPEG2_L1_LS        0x2005
+N#define AUDIO_FORMAT_IEC1937_MPEG2_L2_3         0x2006
+N
+N
+N/* Predefined Audio Channel Configuration Bits */
+N#define AUDIO_CHANNEL_M                         0x0000  /* Mono */
+N#define AUDIO_CHANNEL_L                         0x0001  /* Left Front */
+N#define AUDIO_CHANNEL_R                         0x0002  /* Right Front */
+N#define AUDIO_CHANNEL_C                         0x0004  /* Center Front */
+N#define AUDIO_CHANNEL_LFE                       0x0008  /* Low Freq. Enhance. */
+N#define AUDIO_CHANNEL_LS                        0x0010  /* Left Surround */
+N#define AUDIO_CHANNEL_RS                        0x0020  /* Right Surround */
+N#define AUDIO_CHANNEL_LC                        0x0040  /* Left of Center */
+N#define AUDIO_CHANNEL_RC                        0x0080  /* Right of Center */
+N#define AUDIO_CHANNEL_S                         0x0100  /* Surround */
+N#define AUDIO_CHANNEL_SL                        0x0200  /* Side Left */
+N#define AUDIO_CHANNEL_SR                        0x0400  /* Side Right */
+N#define AUDIO_CHANNEL_T                         0x0800  /* Top */
+N
+N
+N/* Feature Unit Control Bits */
+N#define AUDIO_CONTROL_MUTE                      0x0001
+N#define AUDIO_CONTROL_VOLUME                    0x0002
+N#define AUDIO_CONTROL_BASS                      0x0004
+N#define AUDIO_CONTROL_MID                       0x0008
+N#define AUDIO_CONTROL_TREBLE                    0x0010
+N#define AUDIO_CONTROL_GRAPHIC_EQUALIZER         0x0020
+N#define AUDIO_CONTROL_AUTOMATIC_GAIN            0x0040
+N#define AUDIO_CONTROL_DEALY                     0x0080
+N#define AUDIO_CONTROL_BASS_BOOST                0x0100
+N#define AUDIO_CONTROL_LOUDNESS                  0x0200
+N
+N/* Processing Unit Control Bits: */
+N#define AUDIO_CONTROL_ENABLE                    0x0001  /* Common Bit */
+N#define AUDIO_CONTROL_MODE_SELECT               0x0002  /* Common Bit */
+N
+N/* - Up/Down-mix Control Bits */
+N/*      AUDIO_CONTROL_ENABLE                    0x0001     Common Bit */
+N/*      AUDIO_CONTROL_MODE_SELECT               0x0002     Common Bit */
+N
+N/* - Dolby Prologic Control Bits */
+N/*      AUDIO_CONTROL_ENABLE                    0x0001     Common Bit */
+N/*      AUDIO_CONTROL_MODE_SELECT               0x0002     Common Bit */
+N
+N/* - 3D Stereo Extender Control Bits */
+N/*      AUDIO_CONTROL_ENABLE                    0x0001     Common Bit */
+N#define AUDIO_CONTROL_SPACIOUSNESS              0x0002
+N
+N/* - Reverberation Control Bits */
+N/*      AUDIO_CONTROL_ENABLE                    0x0001     Common Bit */
+N#define AUDIO_CONTROL_REVERB_TYPE               0x0002
+N#define AUDIO_CONTROL_REVERB_LEVEL              0x0004
+N#define AUDIO_CONTROL_REVERB_TIME               0x0008
+N#define AUDIO_CONTROL_REVERB_FEEDBACK           0x0010
+N
+N/* - Chorus Control Bits */
+N/*      AUDIO_CONTROL_ENABLE                    0x0001     Common Bit */
+N#define AUDIO_CONTROL_CHORUS_LEVEL              0x0002
+N#define AUDIO_CONTROL_SHORUS_RATE               0x0004
+N#define AUDIO_CONTROL_CHORUS_DEPTH              0x0008
+N
+N/* - Dynamic Range Compressor Control Bits */
+N/*      AUDIO_CONTROL_ENABLE                    0x0001     Common Bit */
+N#define AUDIO_CONTROL_COMPRESSION_RATE          0x0002
+N#define AUDIO_CONTROL_MAX_AMPL                  0x0004
+N#define AUDIO_CONTROL_THRESHOLD                 0x0008
+N#define AUDIO_CONTROL_ATTACK_TIME               0x0010
+N#define AUDIO_CONTROL_RELEASE_TIME              0x0020
+N
+N/* Extension Unit Control Bits */
+N/*      AUDIO_CONTROL_ENABLE                    0x0001     Common Bit */
+N
+N/* Endpoint Control Bits */
+N#define AUDIO_CONTROL_SAMPLING_FREQ             0x01
+N#define AUDIO_CONTROL_PITCH                     0x02
+N#define AUDIO_MAX_PACKETS_ONLY                  0x80
+N
+N
+N/* Audio Terminal Types */
+N
+N/*  USB Terminal Types */
+N#define AUDIO_TERMINAL_USB_UNDEFINED            0x0100
+N#define AUDIO_TERMINAL_USB_STREAMING            0x0101
+N#define AUDIO_TERMINAL_USB_VENDOR_SPECIFIC      0x01FF
+N
+N/*  Input Terminal Types */
+N#define AUDIO_TERMINAL_INPUT_UNDEFINED          0x0200
+N#define AUDIO_TERMINAL_MICROPHONE               0x0201
+N#define AUDIO_TERMINAL_DESKTOP_MICROPHONE       0x0202
+N#define AUDIO_TERMINAL_PERSONAL_MICROPHONE      0x0203
+N#define AUDIO_TERMINAL_OMNI_DIR_MICROPHONE      0x0204
+N#define AUDIO_TERMINAL_MICROPHONE_ARRAY         0x0205
+N#define AUDIO_TERMINAL_PROCESSING_MIC_ARRAY     0x0206
+N
+N/*  Output Terminal Types */
+N#define AUDIO_TERMINAL_OUTPUT_UNDEFINED         0x0300
+N#define AUDIO_TERMINAL_SPEAKER                  0x0301
+N#define AUDIO_TERMINAL_HEADPHONES               0x0302
+N#define AUDIO_TERMINAL_HEAD_MOUNTED_AUDIO       0x0303
+N#define AUDIO_TERMINAL_DESKTOP_SPEAKER          0x0304
+N#define AUDIO_TERMINAL_ROOM_SPEAKER             0x0305
+N#define AUDIO_TERMINAL_COMMUNICATION_SPEAKER    0x0306
+N#define AUDIO_TERMINAL_LOW_FREQ_SPEAKER         0x0307
+N
+N/*  Bi-directional Terminal Types */
+N#define AUDIO_TERMINAL_BIDIRECTIONAL_UNDEFINED  0x0400
+N#define AUDIO_TERMINAL_HANDSET                  0x0401
+N#define AUDIO_TERMINAL_HEAD_MOUNTED_HANDSET     0x0402
+N#define AUDIO_TERMINAL_SPEAKERPHONE             0x0403
+N#define AUDIO_TERMINAL_SPEAKERPHONE_ECHOSUPRESS 0x0404
+N#define AUDIO_TERMINAL_SPEAKERPHONE_ECHOCANCEL  0x0405
+N
+N/*  Telephony Terminal Types */
+N#define AUDIO_TERMINAL_TELEPHONY_UNDEFINED      0x0500
+N#define AUDIO_TERMINAL_PHONE_LINE               0x0501
+N#define AUDIO_TERMINAL_TELEPHONE                0x0502
+N#define AUDIO_TERMINAL_DOWN_LINE_PHONE          0x0503
+N
+N/*  External Terminal Types */
+N#define AUDIO_TERMINAL_EXTERNAL_UNDEFINED       0x0600
+N#define AUDIO_TERMINAL_ANALOG_CONNECTOR         0x0601
+N#define AUDIO_TERMINAL_DIGITAL_AUDIO_INTERFACE  0x0602
+N#define AUDIO_TERMINAL_LINE_CONNECTOR           0x0603
+N#define AUDIO_TERMINAL_LEGACY_AUDIO_CONNECTOR   0x0604
+N#define AUDIO_TERMINAL_SPDIF_INTERFACE          0x0605
+N#define AUDIO_TERMINAL_1394_DA_STREAM           0x0606
+N#define AUDIO_TERMINAL_1394_DA_STREAM_TRACK     0x0607
+N
+N/*  Embedded Function Terminal Types */
+N#define AUDIO_TERMINAL_EMBEDDED_UNDEFINED       0x0700
+N#define AUDIO_TERMINAL_CALIBRATION_NOISE        0x0701
+N#define AUDIO_TERMINAL_EQUALIZATION_NOISE       0x0702
+N#define AUDIO_TERMINAL_CD_PLAYER                0x0703
+N#define AUDIO_TERMINAL_DAT                      0x0704
+N#define AUDIO_TERMINAL_DCC                      0x0705
+N#define AUDIO_TERMINAL_MINI_DISK                0x0706
+N#define AUDIO_TERMINAL_ANALOG_TAPE              0x0707
+N#define AUDIO_TERMINAL_PHONOGRAPH               0x0708
+N#define AUDIO_TERMINAL_VCR_AUDIO                0x0709
+N#define AUDIO_TERMINAL_VIDEO_DISC_AUDIO         0x070A
+N#define AUDIO_TERMINAL_DVD_AUDIO                0x070B
+N#define AUDIO_TERMINAL_TV_TUNER_AUDIO           0x070C
+N#define AUDIO_TERMINAL_SATELLITE_RECEIVER_AUDIO 0x070D
+N#define AUDIO_TERMINAL_CABLE_TUNER_AUDIO        0x070E
+N#define AUDIO_TERMINAL_DSS_AUDIO                0x070F
+N#define AUDIO_TERMINAL_RADIO_RECEIVER           0x0710
+N#define AUDIO_TERMINAL_RADIO_TRANSMITTER        0x0711
+N#define AUDIO_TERMINAL_MULTI_TRACK_RECORDER     0x0712
+N#define AUDIO_TERMINAL_SYNTHESIZER              0x0713
+N
+N
+N#endif  /* __AUDIO_H__ */
+L 38 "usbcore.c" 2
+N#include "adcuser.h"
+L 1 "adcuser.h" 1
+N/*----------------------------------------------------------------------------
+N *      U S B  -  K e r n e l
+N *----------------------------------------------------------------------------
+N *      Name:    ADCUSER.H
+N *      Purpose: Audio Device Class Custom User Definitions
+N *      Version: V1.10
+N *----------------------------------------------------------------------------
+N *      This software is supplied "AS IS" without any warranties, express,
+N *      implied or statutory, including but not limited to the implied
+N *      warranties of fitness for purpose, satisfactory quality and
+N *      noninfringement. Keil extends you a royalty-free right to reproduce
+N *      and distribute executable files created using this software for use
+N *      on Philips LPC2xxx microcontroller devices only. Nothing else gives
+N *      you the right to use this software.
+N *
+N *      Copyright (c) 2005-2006 Keil Software.
+N *---------------------------------------------------------------------------*/
+N
+N#ifndef __ADCUSER_H__
+N#define __ADCUSER_H__
+N
+N
+N/* Audio Device Class Requests Callback Functions */
+Nextern uint32_t ADC_IF_GetRequest (void);
+Nextern uint32_t ADC_IF_SetRequest (void);
+Nextern uint32_t ADC_EP_GetRequest (void);
+Nextern uint32_t ADC_EP_SetRequest (void);
+N
+N
+N#endif  /* __ADCUSER_H__ */
+L 39 "usbcore.c" 2
+N#endif
+N
+N#if (USB_HID)
+X#if (0)
+S#include "hid.h"
+S#include "hiduser.h"
+N#endif
+N
+N#if (USB_MSC)
+X#if (0)
+S#include "msc.h"
+S#include "mscuser.h"
+Sextern MSC_CSW CSW;
+N#endif
+N
+N#if (USB_CDC)
+X#if (0)
+S#include "cdc.h"
+S#include "cdcuser.h"
+N#endif
+N
+N#endif
+N
+N#if (USB_VENDOR)
+X#if (0)
+S#include "vendor.h"
+N#endif
+N
+N#pragma diag_suppress 111,177,1441
+N
+N
+Nuint16_t  USB_DeviceStatus;
+Nuint8_t  USB_DeviceAddress;
+Nuint8_t  USB_Configuration;
+Nuint32_t USB_EndPointMask;
+Nuint32_t USB_EndPointHalt;
+Nuint32_t USB_EndPointStall;                         /* EP must stay stalled */
+Nuint8_t  USB_NumInterfaces;
+Nuint8_t  USB_AltSetting[USB_IF_NUM];
+Xuint8_t  USB_AltSetting[4];
+N
+Nuint8_t  EP0Buf[USB_MAX_PACKET0];
+Xuint8_t  EP0Buf[64];
+N
+N
+NUSB_EP_DATA EP0Data;
+N
+NUSB_SETUP_PACKET SetupPacket;
+N
+N
+N/*
+N *  Reset USB Core
+N *    Parameters:      None
+N *    Return Value:    None
+N */
+N
+Nvoid USB_ResetCore (void) {
+N
+N  USB_DeviceStatus  = USB_POWER;
+X  USB_DeviceStatus  = 0;
+N  USB_DeviceAddress = 0;
+N  USB_Configuration = 0;
+N  USB_EndPointMask  = 0x00010001;
+N  USB_EndPointHalt  = 0x00000000;
+N  USB_EndPointStall = 0x00000000;
+N}
+N
+N
+N/*
+N *  USB Request - Setup Stage
+N *    Parameters:      None (global SetupPacket)
+N *    Return Value:    None
+N */
+N
+Nvoid USB_SetupStage (void) {
+N  USB_ReadEP(0x00, (uint8_t *)&SetupPacket);
+N}
+N
+N
+N/*
+N *  USB Request - Data In Stage
+N *    Parameters:      None (global EP0Data)
+N *    Return Value:    None
+N */
+N
+Nvoid USB_DataInStage (void) {
+N  uint32_t cnt;
+N
+N  if (EP0Data.Count > USB_MAX_PACKET0) {
+X  if (EP0Data.Count > 64) {
+N    cnt = USB_MAX_PACKET0;
+X    cnt = 64;
+N  } else {
+N    cnt = EP0Data.Count;
+N  }
+N  cnt = USB_WriteEP(0x80, EP0Data.pData, cnt);
+N  EP0Data.pData += cnt;
+N  EP0Data.Count -= cnt;
+N}
+N
+N
+N/*
+N *  USB Request - Data Out Stage
+N *    Parameters:      None (global EP0Data)
+N *    Return Value:    None
+N */
+N
+Nvoid USB_DataOutStage (void) {
+N  uint32_t cnt;
+N
+N  cnt = USB_ReadEP(0x00, EP0Data.pData);
+N  EP0Data.pData += cnt;
+N  EP0Data.Count -= cnt;
+N}
+N
+N
+N/*
+N *  USB Request - Status In Stage
+N *    Parameters:      None
+N *    Return Value:    None
+N */
+N
+Nvoid USB_StatusInStage (void) {
+N  USB_WriteEP(0x80, NULL, 0);
+X  USB_WriteEP(0x80, ((void *)0), 0);
+N}
+N
+N
+N/*
+N *  USB Request - Status Out Stage
+N *    Parameters:      None
+N *    Return Value:    None
+N */
+N
+Nvoid USB_StatusOutStage (void) {
+N  USB_ReadEP(0x00, EP0Buf);
+N}
+N
+N
+N/*
+N *  Get Status USB Request
+N *    Parameters:      None (global SetupPacket)
+N *    Return Value:    TRUE - Success, FALSE - Error
+N */
+N
+N__inline uint32_t USB_ReqGetStatus (void) {
+N  uint32_t n, m;
+N
+N  switch (SetupPacket.bmRequestType.BM.Recipient) {
+N    case REQUEST_TO_DEVICE:
+X    case 0:
+N      EP0Data.pData = (uint8_t *)&USB_DeviceStatus;
+N      break;
+N    case REQUEST_TO_INTERFACE:
+X    case 1:
+N      if ((USB_Configuration != 0) && (SetupPacket.wIndex.WB.L < USB_NumInterfaces)) {
+N        *((__packed uint16_t *)EP0Buf) = 0;
+N        EP0Data.pData = EP0Buf;
+N      } else {
+N        return (FALSE);
+X        return ((0));
+N      }
+N      break;
+N    case REQUEST_TO_ENDPOINT:
+X    case 2:
+N      n = SetupPacket.wIndex.WB.L & 0x8F;
+N      m = (n & 0x80) ? ((1 << 16) << (n & 0x0F)) : (1 << n);
+N      if (((USB_Configuration != 0) || ((n & 0x0F) == 0)) && (USB_EndPointMask & m)) {
+N        *((__packed uint16_t *)EP0Buf) = (USB_EndPointHalt & m) ? 1 : 0;
+N        EP0Data.pData = EP0Buf;
+N      } else {
+N        return (FALSE);
+X        return ((0));
+N      }
+N      break;
+N    default:
+N      return (FALSE);
+X      return ((0));
+N  }
+N  return (TRUE);
+X  return ((1));
+N}
+N
+N
+N/*
+N *  Set/Clear Feature USB Request
+N *    Parameters:      sc:    0 - Clear, 1 - Set
+N *                            (global SetupPacket)
+N *    Return Value:    TRUE - Success, FALSE - Error
+N */
+N
+N__inline uint32_t USB_ReqSetClrFeature (uint32_t sc) {
+N  uint32_t n, m;
+N
+N  switch (SetupPacket.bmRequestType.BM.Recipient) {
+N    case REQUEST_TO_DEVICE:
+X    case 0:
+N      if (SetupPacket.wValue.W == USB_FEATURE_REMOTE_WAKEUP) {
+X      if (SetupPacket.wValue.W == 1) {
+N        if (sc) {
+N          USB_WakeUpCfg(TRUE);
+X          USB_WakeUpCfg((1));
+N          USB_DeviceStatus |=  USB_GETSTATUS_REMOTE_WAKEUP;
+X          USB_DeviceStatus |=  0x02;
+N        } else {
+N          USB_WakeUpCfg(FALSE);
+X          USB_WakeUpCfg((0));
+N          USB_DeviceStatus &= ~USB_GETSTATUS_REMOTE_WAKEUP;
+X          USB_DeviceStatus &= ~0x02;
+N        }
+N      } else {
+N        return (FALSE);
+X        return ((0));
+N      }
+N      break;
+N    case REQUEST_TO_INTERFACE:
+X    case 1:
+N      return (FALSE);
+X      return ((0));
+N    case REQUEST_TO_ENDPOINT:
+X    case 2:
+N      n = SetupPacket.wIndex.WB.L & 0x8F;
+N      m = (n & 0x80) ? ((1 << 16) << (n & 0x0F)) : (1 << n);
+N      if ((USB_Configuration != 0) && ((n & 0x0F) != 0) && (USB_EndPointMask & m)) {
+N        if (SetupPacket.wValue.W == USB_FEATURE_ENDPOINT_STALL) {
+X        if (SetupPacket.wValue.W == 0) {
+N          if (sc) {
+N            USB_SetStallEP(n);
+N            USB_EndPointHalt |=  m;
+N          } else {
+N            if ((USB_EndPointStall & m) != 0) {
+N              return (TRUE);
+X              return ((1));
+N            }
+N            USB_ClrStallEP(n);
+N#if (USB_MSC)
+X#if (0)
+S            if ((n == MSC_EP_IN) && ((USB_EndPointHalt & m) != 0)) {
+S              /* Compliance Test: rewrite CSW after unstall */
+S              if (CSW.dSignature == MSC_CSW_Signature) {
+S                USB_WriteEP(MSC_EP_IN, (uint8_t *)&CSW, sizeof(CSW));
+S              }
+S            }
+N#endif
+N            USB_EndPointHalt &= ~m;
+N          }
+N        } else {
+N          return (FALSE);
+X          return ((0));
+N        }
+N      } else {
+N        return (FALSE);
+X        return ((0));
+N      }
+N      break;
+N    default:
+N      return (FALSE);
+X      return ((0));
+N  }
+N  return (TRUE);
+X  return ((1));
+N}
+N
+N
+N/*
+N *  Set Address USB Request
+N *    Parameters:      None (global SetupPacket)
+N *    Return Value:    TRUE - Success, FALSE - Error
+N */
+N
+N__inline uint32_t USB_ReqSetAddress (void) {
+N
+N  switch (SetupPacket.bmRequestType.BM.Recipient) {
+N    case REQUEST_TO_DEVICE:
+X    case 0:
+N      USB_DeviceAddress = 0x80 | SetupPacket.wValue.WB.L;
+N      break;
+N    default:
+N      return (FALSE);
+X      return ((0));
+N  }
+N  return (TRUE);
+X  return ((1));
+N}
+N
+N
+N/*
+N *  Get Descriptor USB Request
+N *    Parameters:      None (global SetupPacket)
+N *    Return Value:    TRUE - Success, FALSE - Error
+N */
+N
+N__inline uint32_t USB_ReqGetDescriptor (void) {
+N  uint8_t  *pD;
+N  uint32_t len, n;
+N
+N  switch (SetupPacket.bmRequestType.BM.Recipient) {
+N    case REQUEST_TO_DEVICE:
+X    case 0:
+N      switch (SetupPacket.wValue.WB.H) {
+N        case USB_DEVICE_DESCRIPTOR_TYPE:
+X        case 1:
+N          EP0Data.pData = (uint8_t *)USB_DeviceDescriptor;
+N          len = USB_DEVICE_DESC_SIZE;
+X          len = (sizeof(USB_DEVICE_DESCRIPTOR));
+N          break;
+N        case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+X        case 2:
+N          pD = (uint8_t *)USB_ConfigDescriptor;
+N          for (n = 0; n != SetupPacket.wValue.WB.L; n++) {
+N            if (((USB_CONFIGURATION_DESCRIPTOR *)pD)->bLength != 0) {
+N              pD += ((USB_CONFIGURATION_DESCRIPTOR *)pD)->wTotalLength;
+N            }
+N          }
+N          if (((USB_CONFIGURATION_DESCRIPTOR *)pD)->bLength == 0) {
+N            return (FALSE);
+X            return ((0));
+N          }
+N          EP0Data.pData = pD;
+N          len = ((USB_CONFIGURATION_DESCRIPTOR *)pD)->wTotalLength;
+N          break;
+N        case USB_STRING_DESCRIPTOR_TYPE:
+X        case 3:
+N          pD = (uint8_t *)USB_StringDescriptor;
+N          for (n = 0; n != SetupPacket.wValue.WB.L; n++) {
+N            if (((USB_STRING_DESCRIPTOR *)pD)->bLength != 0) {
+N              pD += ((USB_STRING_DESCRIPTOR *)pD)->bLength;
+N            }
+N          }
+N          if (((USB_STRING_DESCRIPTOR *)pD)->bLength == 0) {
+N            return (FALSE);
+X            return ((0));
+N          }
+N          EP0Data.pData = pD;
+N		  len = ((USB_STRING_DESCRIPTOR *)EP0Data.pData)->bLength;
+N          break;
+N        default:
+N          return (FALSE);
+X          return ((0));
+N      }
+N      break;
+N    case REQUEST_TO_INTERFACE:
+X    case 1:
+N      switch (SetupPacket.wValue.WB.H) {
+N#if USB_HID
+X#if 0
+S        case HID_HID_DESCRIPTOR_TYPE:
+S          if (SetupPacket.wIndex.WB.L != USB_HID_IF_NUM) {
+S            return (FALSE);    /* Only Single HID Interface is supported */
+S          }
+S          EP0Data.pData = (uint8_t *)USB_ConfigDescriptor + HID_DESC_OFFSET;
+S          len = HID_DESC_SIZE;
+S          break;
+S        case HID_REPORT_DESCRIPTOR_TYPE:
+S          if (SetupPacket.wIndex.WB.L != USB_HID_IF_NUM) {
+S            return (FALSE);    /* Only Single HID Interface is supported */
+S          }
+S          EP0Data.pData = (uint8_t *)HID_ReportDescriptor;
+S          len = HID_ReportDescSize;
+S          break;
+S        case HID_PHYSICAL_DESCRIPTOR_TYPE:
+S          return (FALSE);      /* HID Physical Descriptor is not supported */
+N#endif
+N        default:
+N          return (FALSE);
+X          return ((0));
+N      }
+N      break;
+N    default:
+N      return (FALSE);
+X      return ((0));
+N  }
+N
+N  if (EP0Data.Count > len) {
+N    EP0Data.Count = len;
+N  }
+N
+N  return (TRUE);
+X  return ((1));
+N}
+N
+N
+N/*
+N *  Get Configuration USB Request
+N *    Parameters:      None (global SetupPacket)
+N *    Return Value:    TRUE - Success, FALSE - Error
+N */
+N
+N__inline uint32_t USB_ReqGetConfiguration (void) {
+N
+N  switch (SetupPacket.bmRequestType.BM.Recipient) {
+N    case REQUEST_TO_DEVICE:
+X    case 0:
+N      EP0Data.pData = &USB_Configuration;
+N      break;
+N    default:
+N      return (FALSE);
+X      return ((0));
+N  }
+N  return (TRUE);
+X  return ((1));
+N}
+N
+N
+N/*
+N *  Set Configuration USB Request
+N *    Parameters:      None (global SetupPacket)
+N *    Return Value:    TRUE - Success, FALSE - Error
+N */
+N
+N__inline uint32_t USB_ReqSetConfiguration (void) {
+N  USB_COMMON_DESCRIPTOR *pD;
+N  uint32_t alt = 0;
+N  uint32_t n, m;
+N
+N  switch (SetupPacket.bmRequestType.BM.Recipient) {
+N    case REQUEST_TO_DEVICE:
+X    case 0:
+N
+N      if (SetupPacket.wValue.WB.L) {
+N        pD = (USB_COMMON_DESCRIPTOR *)USB_ConfigDescriptor;
+N        while (pD->bLength) {
+N          switch (pD->bDescriptorType) {
+N            case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+X            case 2:
+N              if (((USB_CONFIGURATION_DESCRIPTOR *)pD)->bConfigurationValue == SetupPacket.wValue.WB.L) {
+N                USB_Configuration = SetupPacket.wValue.WB.L;
+N                USB_NumInterfaces = ((USB_CONFIGURATION_DESCRIPTOR *)pD)->bNumInterfaces;
+N                for (n = 0; n < USB_IF_NUM; n++) {
+X                for (n = 0; n < 4; n++) {
+N                  USB_AltSetting[n] = 0;
+N                }
+N                for (n = 1; n < 16; n++) {
+N                  if (USB_EndPointMask & (1 << n)) {
+N                    USB_DisableEP(n);
+N                  }
+N                  if (USB_EndPointMask & ((1 << 16) << n)) {
+N                    USB_DisableEP(n | 0x80);
+N                  }
+N                }
+N                USB_EndPointMask = 0x00010001;
+N                USB_EndPointHalt = 0x00000000;
+N                USB_EndPointStall= 0x00000000;
+N                USB_Configure(TRUE);
+X                USB_Configure((1));
+N                if (((USB_CONFIGURATION_DESCRIPTOR *)pD)->bmAttributes & USB_CONFIG_POWERED_MASK) {
+X                if (((USB_CONFIGURATION_DESCRIPTOR *)pD)->bmAttributes & 0x40) {
+N                  USB_DeviceStatus |=  USB_GETSTATUS_SELF_POWERED;
+X                  USB_DeviceStatus |=  0x01;
+N                } else {
+N                  USB_DeviceStatus &= ~USB_GETSTATUS_SELF_POWERED;
+X                  USB_DeviceStatus &= ~0x01;
+N                }
+N              } else {
+N                (uint8_t *)pD += ((USB_CONFIGURATION_DESCRIPTOR *)pD)->wTotalLength;
+N                continue;
+N              }
+N              break;
+N            case USB_INTERFACE_DESCRIPTOR_TYPE:
+X            case 4:
+N              alt = ((USB_INTERFACE_DESCRIPTOR *)pD)->bAlternateSetting;
+N              break;
+N            case USB_ENDPOINT_DESCRIPTOR_TYPE:
+X            case 5:
+N              if (alt == 0) {
+N                n = ((USB_ENDPOINT_DESCRIPTOR *)pD)->bEndpointAddress & 0x8F;
+N                m = (n & 0x80) ? ((1 << 16) << (n & 0x0F)) : (1 << n);
+N                USB_EndPointMask |= m;
+N                USB_ConfigEP((USB_ENDPOINT_DESCRIPTOR *)pD);
+N                USB_EnableEP(n);
+N                USB_ResetEP(n);
+N              }
+N              break;
+N          }
+N          (uint8_t *)pD += pD->bLength;
+N        }
+N      }
+N      else {
+N        USB_Configuration = 0;
+N        for (n = 1; n < 16; n++) {
+N          if (USB_EndPointMask & (1 << n)) {
+N            USB_DisableEP(n);
+N          }
+N          if (USB_EndPointMask & ((1 << 16) << n)) {
+N            USB_DisableEP(n | 0x80);
+N          }
+N        }
+N        USB_EndPointMask  = 0x00010001;
+N        USB_EndPointHalt  = 0x00000000;
+N        USB_EndPointStall = 0x00000000;
+N        USB_Configure(FALSE);
+X        USB_Configure((0));
+N      }
+N
+N      if (USB_Configuration != SetupPacket.wValue.WB.L) {
+N        return (FALSE);
+X        return ((0));
+N      }
+N      break;
+N    default:
+N      return (FALSE);
+X      return ((0));
+N  }
+N  return (TRUE);
+X  return ((1));
+N}
+N
+N
+N/*
+N *  Get Interface USB Request
+N *    Parameters:      None (global SetupPacket)
+N *    Return Value:    TRUE - Success, FALSE - Error
+N */
+N
+N__inline uint32_t USB_ReqGetInterface (void) {
+N
+N  switch (SetupPacket.bmRequestType.BM.Recipient) {
+N    case REQUEST_TO_INTERFACE:
+X    case 1:
+N      if ((USB_Configuration != 0) && (SetupPacket.wIndex.WB.L < USB_NumInterfaces)) {
+N        EP0Data.pData = USB_AltSetting + SetupPacket.wIndex.WB.L;
+N      } else {
+N        return (FALSE);
+X        return ((0));
+N      }
+N      break;
+N    default:
+N      return (FALSE);
+X      return ((0));
+N  }
+N  return (TRUE);
+X  return ((1));
+N}
+N
+N
+N/*
+N *  Set Interface USB Request
+N *    Parameters:      None (global SetupPacket)
+N *    Return Value:    TRUE - Success, FALSE - Error
+N */
+N
+N__inline uint32_t USB_ReqSetInterface (void) {
+N  USB_COMMON_DESCRIPTOR *pD;
+N  uint32_t ifn = 0, alt = 0, old = 0, msk = 0;
+N  uint32_t n, m;
+N  uint32_t set;
+N
+N  switch (SetupPacket.bmRequestType.BM.Recipient) {
+N    case REQUEST_TO_INTERFACE:
+X    case 1:
+N      if (USB_Configuration == 0) return (FALSE);
+X      if (USB_Configuration == 0) return ((0));
+N      set = FALSE;
+X      set = (0);
+N      pD  = (USB_COMMON_DESCRIPTOR *)USB_ConfigDescriptor;
+N      while (pD->bLength) {
+N        switch (pD->bDescriptorType) {
+N          case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+X          case 2:
+N            if (((USB_CONFIGURATION_DESCRIPTOR *)pD)->bConfigurationValue != USB_Configuration) {
+N              (uint8_t *)pD += ((USB_CONFIGURATION_DESCRIPTOR *)pD)->wTotalLength;
+N              continue;
+N            }
+N            break;
+N          case USB_INTERFACE_DESCRIPTOR_TYPE:
+X          case 4:
+N            ifn = ((USB_INTERFACE_DESCRIPTOR *)pD)->bInterfaceNumber;
+N            alt = ((USB_INTERFACE_DESCRIPTOR *)pD)->bAlternateSetting;
+N            msk = 0;
+N            if ((ifn == SetupPacket.wIndex.WB.L) && (alt == SetupPacket.wValue.WB.L)) {
+N              set = TRUE;
+X              set = (1);
+N              old = USB_AltSetting[ifn];
+N              USB_AltSetting[ifn] = (uint8_t)alt;
+N            }
+N            break;
+N          case USB_ENDPOINT_DESCRIPTOR_TYPE:
+X          case 5:
+N            if (ifn == SetupPacket.wIndex.WB.L) {
+N              n = ((USB_ENDPOINT_DESCRIPTOR *)pD)->bEndpointAddress & 0x8F;
+N              m = (n & 0x80) ? ((1 << 16) << (n & 0x0F)) : (1 << n);
+N              if (alt == SetupPacket.wValue.WB.L) {
+N                USB_EndPointMask |=  m;
+N                USB_EndPointHalt &= ~m;
+N                USB_ConfigEP((USB_ENDPOINT_DESCRIPTOR *)pD);
+N                USB_EnableEP(n);
+N                USB_ResetEP(n);
+N                msk |= m;
+N              }
+N              else if ((alt == old) && ((msk & m) == 0)) {
+N                USB_EndPointMask &= ~m;
+N                USB_EndPointHalt &= ~m;
+N                USB_DisableEP(n);
+N              }
+N            }
+N           break;
+N        }
+N        (uint8_t *)pD += pD->bLength;
+N      }
+N      break;
+N    default:
+N      return (FALSE);
+X      return ((0));
+N  }
+N
+N  return (set);
+N}
+N
+N
+N/*
+N *  USB Endpoint 0 Event Callback
+N *    Parameters:      event
+N *    Return Value:    none
+N */
+N 
+Nvoid USB_EndPoint0 (uint32_t event) {
+N
+N  switch (event) {
+N    case USB_EVT_SETUP:
+X    case 1:
+N      USB_SetupStage();
+N      USB_DirCtrlEP(SetupPacket.bmRequestType.BM.Dir);
+N      EP0Data.Count = SetupPacket.wLength;     /* Number of bytes to transfer */
+N      switch (SetupPacket.bmRequestType.BM.Type) {
+N
+N        case REQUEST_STANDARD:
+X        case 0:
+N          switch (SetupPacket.bRequest) {
+N            case USB_REQUEST_GET_STATUS:
+X            case 0:
+N              if (!USB_ReqGetStatus()) {
+N                goto stall_i;
+N              }
+N              USB_DataInStage();
+N              break;
+N
+N            case USB_REQUEST_CLEAR_FEATURE:
+X            case 1:
+N              if (!USB_ReqSetClrFeature(0)) {
+N                goto stall_i;
+N              }
+N              USB_StatusInStage();
+N#if USB_FEATURE_EVENT
+X#if 0
+S              USB_Feature_Event();
+N#endif
+N              break;
+N
+N            case USB_REQUEST_SET_FEATURE:
+X            case 3:
+N              if (!USB_ReqSetClrFeature(1)) {
+N                goto stall_i;
+N              }
+N              USB_StatusInStage();
+N#if USB_FEATURE_EVENT
+X#if 0
+S              USB_Feature_Event();
+N#endif
+N              break;
+N
+N            case USB_REQUEST_SET_ADDRESS:
+X            case 5:
+N              if (!USB_ReqSetAddress()) {
+N                goto stall_i;
+N              }
+N              USB_StatusInStage();
+N              break;
+N
+N            case USB_REQUEST_GET_DESCRIPTOR:
+X            case 6:
+N              if (!USB_ReqGetDescriptor()) {
+N                goto stall_i;
+N              }
+N              USB_DataInStage();
+N              break;
+N
+N            case USB_REQUEST_SET_DESCRIPTOR:
+X            case 7:
+N/*stall_o:*/  USB_SetStallEP(0x00);            /* not supported */
+N              EP0Data.Count = 0;
+N              break;
+N
+N            case USB_REQUEST_GET_CONFIGURATION:
+X            case 8:
+N              if (!USB_ReqGetConfiguration()) {
+N                goto stall_i;
+N              }
+N              USB_DataInStage();
+N              break;
+N
+N            case USB_REQUEST_SET_CONFIGURATION:
+X            case 9:
+N              if (!USB_ReqSetConfiguration()) {
+N                goto stall_i;
+N              }
+N              USB_StatusInStage();
+N#if USB_CONFIGURE_EVENT
+X#if 0
+S              USB_Configure_Event();
+N#endif
+N              break;
+N
+N            case USB_REQUEST_GET_INTERFACE:
+X            case 10:
+N              if (!USB_ReqGetInterface()) {
+N                goto stall_i;
+N              }
+N              USB_DataInStage();
+N              break;
+N
+N            case USB_REQUEST_SET_INTERFACE:
+X            case 11:
+N              if (!USB_ReqSetInterface()) {
+N                goto stall_i;
+N              }
+N              USB_StatusInStage();
+N#if USB_INTERFACE_EVENT
+X#if 0
+S              USB_Interface_Event();
+N#endif
+N              break;
+N
+N            default:
+N              goto stall_i;
+N          }
+N          break;  /* end case REQUEST_STANDARD */
+N
+N#if USB_CLASS
+X#if 1
+N        case REQUEST_CLASS:
+X        case 1:
+N          switch (SetupPacket.bmRequestType.BM.Recipient) {
+N
+N            case REQUEST_TO_DEVICE:
+X            case 0:
+N              goto stall_i;                                              /* not supported */
+N
+N            case REQUEST_TO_INTERFACE:
+X            case 1:
+N#if USB_HID
+X#if 0
+S              if (SetupPacket.wIndex.WB.L == USB_HID_IF_NUM) {           /* IF number correct? */
+S                switch (SetupPacket.bRequest) {
+S                  case HID_REQUEST_GET_REPORT:
+S                    if (HID_GetReport()) {
+S                      EP0Data.pData = EP0Buf;                            /* point to data to be sent */
+S                      USB_DataInStage();                                 /* send requested data */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case HID_REQUEST_SET_REPORT:
+S                    EP0Data.pData = EP0Buf;                              /* data to be received */ 
+S                    goto setup_class_ok;
+S                  case HID_REQUEST_GET_IDLE:
+S                    if (HID_GetIdle()) {
+S                      EP0Data.pData = EP0Buf;                            /* point to data to be sent */
+S                      USB_DataInStage();                                 /* send requested data */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case HID_REQUEST_SET_IDLE:
+S                    if (HID_SetIdle()) {
+S                      USB_StatusInStage();                               /* send Acknowledge */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case HID_REQUEST_GET_PROTOCOL:
+S                    if (HID_GetProtocol()) {
+S                      EP0Data.pData = EP0Buf;                            /* point to data to be sent */
+S                      USB_DataInStage();                                 /* send requested data */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case HID_REQUEST_SET_PROTOCOL:
+S                    if (HID_SetProtocol()) {
+S                      USB_StatusInStage();                               /* send Acknowledge */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                }
+S              }
+N#endif  /* USB_HID */
+N#if USB_MSC
+X#if 0
+S              if (SetupPacket.wIndex.WB.L == USB_MSC_IF_NUM) {           /* IF number correct? */
+S                switch (SetupPacket.bRequest) {
+S                  case MSC_REQUEST_RESET:
+S                    if ((SetupPacket.wValue.W == 0) &&	                 /* RESET with invalid parameters -> STALL */
+S                        (SetupPacket.wLength  == 0)) {
+S                      if (MSC_Reset()) {
+S                        USB_StatusInStage();
+S                        goto setup_class_ok;
+S                      }
+S                    }
+S                    break;
+S                  case MSC_REQUEST_GET_MAX_LUN:
+S                    if ((SetupPacket.wValue.W == 0) &&	                 /* GET_MAX_LUN with invalid parameters -> STALL */
+S                        (SetupPacket.wLength  == 1)) { 
+S                      if (MSC_GetMaxLUN()) {
+S                        EP0Data.pData = EP0Buf;
+S                        USB_DataInStage();
+S                        goto setup_class_ok;
+S                      }
+S                    }
+S                    break;
+S                }
+S              }
+N#endif  /* USB_MSC */
+N#if USB_AUDIO
+X#if 1
+N              if ((SetupPacket.wIndex.WB.L == USB_ADC_CIF_NUM)  ||       /* IF number correct? */
+X              if ((SetupPacket.wIndex.WB.L == 0)  ||        
+N                  (SetupPacket.wIndex.WB.L == USB_ADC_SIF1_NUM) ||
+X                  (SetupPacket.wIndex.WB.L == 1) ||
+N                  (SetupPacket.wIndex.WB.L == USB_ADC_SIF2_NUM)) {
+X                  (SetupPacket.wIndex.WB.L == 2)) {
+N                switch (SetupPacket.bRequest) {
+N                  case AUDIO_REQUEST_GET_CUR:
+X                  case 0x81:
+N                  case AUDIO_REQUEST_GET_MIN:
+X                  case 0x82:
+N                  case AUDIO_REQUEST_GET_MAX:
+X                  case 0x83:
+N                  case AUDIO_REQUEST_GET_RES:
+X                  case 0x84:
+N                    if (ADC_IF_GetRequest()) {
+N                      EP0Data.pData = EP0Buf;                            /* point to data to be sent */
+N                      USB_DataInStage();                                 /* send requested data */
+N                      goto setup_class_ok;
+N                    }
+N                    break;
+N                  case AUDIO_REQUEST_SET_CUR:
+X                  case 0x01:
+N//                case AUDIO_REQUEST_SET_MIN:
+N//                case AUDIO_REQUEST_SET_MAX:
+N//                case AUDIO_REQUEST_SET_RES:
+N                    EP0Data.pData = EP0Buf;                              /* data to be received */ 
+N                    goto setup_class_ok;
+N                }
+N              }
+N#endif  /* USB_AUDIO */
+N#if USB_CDC
+X#if 0
+S              if ((SetupPacket.wIndex.WB.L == USB_CDC_CIF_NUM)  ||       /* IF number correct? */
+S                  (SetupPacket.wIndex.WB.L == USB_CDC_DIF_NUM)) {
+S                switch (SetupPacket.bRequest) {
+S                  case CDC_SEND_ENCAPSULATED_COMMAND:
+S                    EP0Data.pData = EP0Buf;                              /* data to be received, see USB_EVT_OUT */
+S                    goto setup_class_ok;
+S                  case CDC_GET_ENCAPSULATED_RESPONSE:
+S                    if (CDC_GetEncapsulatedResponse()) {
+S                      EP0Data.pData = EP0Buf;                            /* point to data to be sent */
+S                      USB_DataInStage();                                 /* send requested data */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case CDC_SET_COMM_FEATURE:
+S                    EP0Data.pData = EP0Buf;                              /* data to be received, see USB_EVT_OUT */
+S                    goto setup_class_ok;
+S                  case CDC_GET_COMM_FEATURE:
+S                    if (CDC_GetCommFeature(SetupPacket.wValue.W)) {
+S                      EP0Data.pData = EP0Buf;                            /* point to data to be sent */
+S                      USB_DataInStage();                                 /* send requested data */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case CDC_CLEAR_COMM_FEATURE:
+S                    if (CDC_ClearCommFeature(SetupPacket.wValue.W)) {
+S                      USB_StatusInStage();                               /* send Acknowledge */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case CDC_SET_LINE_CODING:
+S                    EP0Data.pData = EP0Buf;                              /* data to be received, see USB_EVT_OUT */
+S                    goto setup_class_ok;
+S                  case CDC_GET_LINE_CODING:
+S                    if (CDC_GetLineCoding()) {
+S                      EP0Data.pData = EP0Buf;                            /* point to data to be sent */
+S                      USB_DataInStage();                                 /* send requested data */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case CDC_SET_CONTROL_LINE_STATE:
+S                    if (CDC_SetControlLineState(SetupPacket.wValue.W)) {
+S                      USB_StatusInStage();                               /* send Acknowledge */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                  case CDC_SEND_BREAK:
+S                    if (CDC_SendBreak(SetupPacket.wValue.W)) {
+S                      USB_StatusInStage();                               /* send Acknowledge */
+S                      goto setup_class_ok;
+S                    }
+S                    break;
+S                }
+S              }
+N#endif  /* USB_CDC */
+N              goto stall_i;                                              /* not supported */
+N              /* end case REQUEST_TO_INTERFACE */
+N
+N            case REQUEST_TO_ENDPOINT:
+X            case 2:
+N#if USB_AUDIO
+X#if 1
+N              switch (SetupPacket.bRequest) {
+N                case AUDIO_REQUEST_GET_CUR:
+X                case 0x81:
+N                case AUDIO_REQUEST_GET_MIN:
+X                case 0x82:
+N                case AUDIO_REQUEST_GET_MAX:
+X                case 0x83:
+N                case AUDIO_REQUEST_GET_RES:
+X                case 0x84:
+N                  if (ADC_EP_GetRequest()) {
+N                    EP0Data.pData = EP0Buf;                              /* point to data to be sent */
+N                    USB_DataInStage();                                   /* send requested data */
+N                    goto setup_class_ok;
+N                  }
+N                  break;
+N                case AUDIO_REQUEST_SET_CUR:
+X                case 0x01:
+N//              case AUDIO_REQUEST_SET_MIN:
+N//              case AUDIO_REQUEST_SET_MAX:
+N//              case AUDIO_REQUEST_SET_RES:
+N                  EP0Data.pData = EP0Buf;                                /* data to be received */ 
+N                  goto setup_class_ok;
+N              }
+N#endif  /* USB_AUDIO */
+N              goto stall_i;
+N              /* end case REQUEST_TO_ENDPOINT */
+N
+N            default:
+N              goto stall_i;
+N          }
+Nsetup_class_ok:                                                          /* request finished successfully */
+N          break;  /* end case REQUEST_CLASS */
+N#endif  /* USB_CLASS */
+N
+N#if USB_VENDOR
+X#if 0
+S        case REQUEST_VENDOR:
+S          switch (SetupPacket.bmRequestType.BM.Recipient) {
+S
+S            case REQUEST_TO_DEVICE:
+S              if (!USB_ReqVendorDev(TRUE)) {
+S                goto stall_i;                                            /* not supported */               
+S              }
+S              break;
+S
+S            case REQUEST_TO_INTERFACE:
+S              if (!USB_ReqVendorIF(TRUE)) {
+S                goto stall_i;                                            /* not supported */               
+S              }
+S              break;
+S
+S            case REQUEST_TO_ENDPOINT:
+S              if (!USB_ReqVendorEP(TRUE)) {
+S                goto stall_i;                                            /* not supported */               
+S              }
+S              break;
+S
+S            default:
+S              goto stall_i;
+S          }
+S
+S          if (SetupPacket.wLength) {
+S            if (SetupPacket.bmRequestType.BM.Dir == REQUEST_DEVICE_TO_HOST) {
+S              USB_DataInStage();
+S            }
+S          } else {
+S            USB_StatusInStage();
+S          }
+S
+S          break;  /* end case REQUEST_VENDOR */ 
+N#endif  /* USB_VENDOR */
+N
+N        default:
+Nstall_i:  USB_SetStallEP(0x80);
+N          EP0Data.Count = 0;
+N          break;
+N      }
+N      break;  /* end case USB_EVT_SETUP */
+N
+N    case USB_EVT_OUT:
+X    case 2:
+N      if (SetupPacket.bmRequestType.BM.Dir == REQUEST_HOST_TO_DEVICE) {
+X      if (SetupPacket.bmRequestType.BM.Dir == 0) {
+N        if (EP0Data.Count) {                                             /* still data to receive ? */
+N          USB_DataOutStage();                                            /* receive data */
+N          if (EP0Data.Count == 0) {                                      /* data complete ? */
+N            switch (SetupPacket.bmRequestType.BM.Type) {
+N
+N              case REQUEST_STANDARD:
+X              case 0:
+N                goto stall_i;                                            /* not supported */
+N
+N#if (USB_CLASS) 
+X#if (1) 
+N              case REQUEST_CLASS:
+X              case 1:
+N                switch (SetupPacket.bmRequestType.BM.Recipient) {
+N                  case REQUEST_TO_DEVICE:
+X                  case 0:
+N                    goto stall_i;                                        /* not supported */
+N
+N                  case REQUEST_TO_INTERFACE:
+X                  case 1:
+N#if USB_HID
+X#if 0
+S                    if (SetupPacket.wIndex.WB.L == USB_HID_IF_NUM) {     /* IF number correct? */
+S                      switch (SetupPacket.bRequest) {
+S                        case HID_REQUEST_SET_REPORT:
+S                          if (HID_SetReport()) {
+S                            USB_StatusInStage();                         /* send Acknowledge */
+S                            goto out_class_ok;
+S                          }
+S                          break;
+S                      }
+S                    }
+N#endif  /* USB_HID */  
+N#if USB_AUDIO
+X#if 1
+N                    if ((SetupPacket.wIndex.WB.L == USB_ADC_CIF_NUM)  || /* IF number correct? */
+X                    if ((SetupPacket.wIndex.WB.L == 0)  ||  
+N                        (SetupPacket.wIndex.WB.L == USB_ADC_SIF1_NUM) ||
+X                        (SetupPacket.wIndex.WB.L == 1) ||
+N                        (SetupPacket.wIndex.WB.L == USB_ADC_SIF2_NUM)) {
+X                        (SetupPacket.wIndex.WB.L == 2)) {
+N                      switch (SetupPacket.bRequest) {
+N                        case AUDIO_REQUEST_SET_CUR:
+X                        case 0x01:
+N//                      case AUDIO_REQUEST_SET_MIN:
+N//                      case AUDIO_REQUEST_SET_MAX:
+N//                      case AUDIO_REQUEST_SET_RES:
+N                          if (ADC_IF_SetRequest()) {
+N                            USB_StatusInStage();                         /* send Acknowledge */
+N                            goto out_class_ok;
+N                          }
+N                          break;
+N                      }
+N                    }
+N#endif  /* USB_AUDIO */
+N#if USB_CDC
+X#if 0
+S                    if ((SetupPacket.wIndex.WB.L == USB_CDC_CIF_NUM)  || /* IF number correct? */
+S                        (SetupPacket.wIndex.WB.L == USB_CDC_DIF_NUM)) {
+S                      switch (SetupPacket.bRequest) {
+S                        case CDC_SEND_ENCAPSULATED_COMMAND:
+S                          if (CDC_SendEncapsulatedCommand()) {
+S                            USB_StatusInStage();                         /* send Acknowledge */
+S                            goto out_class_ok;
+S                          }
+S                          break;
+S                        case CDC_SET_COMM_FEATURE:
+S                          if (CDC_SetCommFeature(SetupPacket.wValue.W)) {
+S                            USB_StatusInStage();                         /* send Acknowledge */
+S                            goto out_class_ok;
+S                          }
+S                          break;
+S                        case CDC_SET_LINE_CODING:
+S                          if (CDC_SetLineCoding()) {
+S                            USB_StatusInStage();                         /* send Acknowledge */
+S                            goto out_class_ok;
+S                          }
+S                          break;
+S                      }
+S                    } 
+N#endif  /* USB_CDC */
+N                    goto stall_i;
+N                    /* end case REQUEST_TO_INTERFACE */
+N
+N                  case REQUEST_TO_ENDPOINT:
+X                  case 2:
+N#if USB_AUDIO
+X#if 1
+N                    switch (SetupPacket.bRequest) {
+N                      case AUDIO_REQUEST_SET_CUR:
+X                      case 0x01:
+N//                    case AUDIO_REQUEST_SET_MIN:
+N//                    case AUDIO_REQUEST_SET_MAX:
+N//                    case AUDIO_REQUEST_SET_RES:
+N                        if (ADC_EP_SetRequest()) {
+N                          USB_StatusInStage();                           /* send Acknowledge */
+N                          goto out_class_ok;
+N                        }
+N                        break;
+N                    }
+N#endif  /* USB_AUDIO */
+N                    goto stall_i;
+N                    /* end case REQUEST_TO_ENDPOINT */
+N
+N                  default:
+N                    goto stall_i;
+N                }
+Nout_class_ok:                                                            /* request finished successfully */
+N                break; /* end case REQUEST_CLASS */
+N#endif  /* USB_CLASS */
+N
+N#if USB_VENDOR
+X#if 0
+S              case REQUEST_VENDOR:
+S                switch (SetupPacket.bmRequestType.BM.Recipient) {
+S      
+S                  case REQUEST_TO_DEVICE:
+S                    if (!USB_ReqVendorDev(FALSE)) {
+S                      goto stall_i;                                      /* not supported */               
+S                    }
+S                    break;
+S      
+S                  case REQUEST_TO_INTERFACE:
+S                    if (!USB_ReqVendorIF(FALSE)) {
+S                      goto stall_i;                                      /* not supported */               
+S                    }
+S                    break;
+S      
+S                  case REQUEST_TO_ENDPOINT:
+S                    if (!USB_ReqVendorEP(FALSE)) {
+S                      goto stall_i;                                      /* not supported */               
+S                    }
+S                    break;
+S      
+S                  default:
+S                    goto stall_i;
+S                }
+S      
+S                USB_StatusInStage();
+S      
+S                break;  /* end case REQUEST_VENDOR */ 
+N#endif  /* USB_VENDOR */
+N
+N              default:
+N                goto stall_i;
+N            }
+N          }
+N        }
+N      } else {
+N        USB_StatusOutStage();                                            /* receive Acknowledge */
+N      }
+N      break;  /* end case USB_EVT_OUT */
+N
+N    case USB_EVT_IN :
+X    case 3 :
+N      if (SetupPacket.bmRequestType.BM.Dir == REQUEST_DEVICE_TO_HOST) {
+X      if (SetupPacket.bmRequestType.BM.Dir == 1) {
+N        USB_DataInStage();                                               /* send data */
+N      } else {
+N        if (USB_DeviceAddress & 0x80) {
+N          USB_DeviceAddress &= 0x7F;
+N          USB_SetAddress(USB_DeviceAddress);
+N        }
+N      }
+N      break;  /* end case USB_EVT_IN */
+N
+N    case USB_EVT_OUT_STALL:
+X    case 6:
+N      USB_ClrStallEP(0x00);
+N      break;
+N
+N    case USB_EVT_IN_STALL:
+X    case 7:
+N      USB_ClrStallEP(0x80);
+N      break;
+N
+N  }
+N}

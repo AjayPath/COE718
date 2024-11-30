@@ -1,0 +1,9 @@
+.\objects\adcuser.o: adcuser.c
+.\objects\adcuser.o: type.h
+.\objects\adcuser.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\adcuser.o: usb.h
+.\objects\adcuser.o: audio.h
+.\objects\adcuser.o: usbcfg.h
+.\objects\adcuser.o: usbcore.h
+.\objects\adcuser.o: adcuser.h
+.\objects\adcuser.o: usbaudio.h
